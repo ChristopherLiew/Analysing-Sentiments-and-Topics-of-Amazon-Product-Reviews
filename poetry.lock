@@ -29,18 +29,6 @@ yarl = ">=1.0,<2.0"
 speedups = ["aiodns", "brotlipy", "cchardet"]
 
 [[package]]
-name = "ast"
-version = "0.0.2"
-description = "Conversion between protobuf3 and srcML."
-category = "main"
-optional = false
-python-versions = "*"
-
-[package.extras]
-faster-signatures = ["ed25519ll"]
-signatures = ["keyring", "keyrings.alt", "importlib", "pyxdg"]
-
-[[package]]
 name = "astunparse"
 version = "1.6.3"
 description = "An AST unparser for Python"
@@ -791,7 +779,7 @@ python-versions = "*"
 
 [[package]]
 name = "pytorch-lightning"
-version = "1.3.3"
+version = "1.3.4"
 description = "PyTorch Lightning is the lightweight PyTorch wrapper for ML researchers. Scale your models. Write less boilerplate."
 category = "main"
 optional = false
@@ -1381,7 +1369,7 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "04189ddb95667fbcd2cdb7738cd2ea1aabd4f44b586a9ff45e92af40a2f20835"
+content-hash = "be20116632d74bb160ef208daea7ec9ac04786283b8035d1dfe287c6ac86a9c2"
 
 [metadata.files]
 absl-py = [
@@ -1426,10 +1414,6 @@ aiohttp = [
     {file = "aiohttp-3.7.4.post0-cp39-cp39-win32.whl", hash = "sha256:932bb1ea39a54e9ea27fc9232163059a0b8855256f4052e776357ad9add6f1c9"},
     {file = "aiohttp-3.7.4.post0-cp39-cp39-win_amd64.whl", hash = "sha256:02f46fc0e3c5ac58b80d4d56eb0a7c7d97fcef69ace9326289fb9f1955e65cfe"},
     {file = "aiohttp-3.7.4.post0.tar.gz", hash = "sha256:493d3299ebe5f5a7c66b9819eacdcfbbaaf1a8e84911ddffcdc48888497afecf"},
-]
-ast = [
-    {file = "AST-0.0.2-py2-none-any.whl", hash = "sha256:04cf2827c4048d18635ca8f85357a4285d140424ac26028be0dc585f824e07cd"},
-    {file = "AST-0.0.2.tar.gz", hash = "sha256:dc5b79c6ba11aea72c59c791a0bc5ae483b4c18fec6f643002d6fae24361eba0"},
 ]
 astunparse = [
     {file = "astunparse-1.6.3-py2.py3-none-any.whl", hash = "sha256:c2652417f2c8b5bb325c885ae329bdf3f86424075c4fd1a128674bc6fba4b8e8"},
@@ -2061,8 +2045,8 @@ python-levenshtein = [
     {file = "python-Levenshtein-0.12.2.tar.gz", hash = "sha256:dc2395fbd148a1ab31090dd113c366695934b9e85fe5a4b2a032745efd0346f6"},
 ]
 pytorch-lightning = [
-    {file = "pytorch-lightning-1.3.3.tar.gz", hash = "sha256:23fa6054affc880e7fef2efa2ff31c4c7127ad0aaa4e5826af43bc077f9c52b7"},
-    {file = "pytorch_lightning-1.3.3-py3-none-any.whl", hash = "sha256:435c752f2b6391b014a9f0d3dae8daf41f874c509bbda4fdc602fefa8becf48d"},
+    {file = "pytorch-lightning-1.3.4.tar.gz", hash = "sha256:360229919631bbf7755444700c1e6db94f331bb111dbcc6d4160551c46c9619a"},
+    {file = "pytorch_lightning-1.3.4-py3-none-any.whl", hash = "sha256:d15b3180361d9860eacd465baf7eb64637d0f7c9a674dc764afbf60d85bc10e5"},
 ]
 pytz = [
     {file = "pytz-2021.1-py2.py3-none-any.whl", hash = "sha256:eb10ce3e7736052ed3623d49975ce333bcd712c7bb19a58b9e2089d4057d0798"},
