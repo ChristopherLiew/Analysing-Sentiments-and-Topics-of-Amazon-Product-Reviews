@@ -6,13 +6,7 @@ from time import sleep
 from nltk.corpus import stopwords
 from spacy.tokenizer import Tokenizer
 import unicodedata
-from Text_Preprocessing import contractions
-
-# # Import Augmented Data
-# amz_syn_aug = pd.read_csv('../Amazon product reviews dataset/Synonym_augmented_data/amazon_synaug_train.csv')
-#
-# # Import Unaugmented Data
-# amz_norm = pd.read_csv('../Amazon product reviews dataset/amazon_train.csv')
+from preprocessing import contractions
 
 # A. Preprocessing Functions
 # 1. Removing accented characters
@@ -87,7 +81,8 @@ def preprocess_text(data, remove_accented_char=True, contraction_expansion=True,
 
     processed_corpus = []
     corpus = data['reviews.text']
-    nlp = spacy.load('en_core_web_sm', parse=True, tag=True, entity=True)
+    nlp = spacy.load("en_core_web_sm", 
+                    disable=["attribute_ruler", "lemmatizer"])
     tokenizer = custom_tokenizer(nlp)
     nlp.tokenizer = tokenizer
 

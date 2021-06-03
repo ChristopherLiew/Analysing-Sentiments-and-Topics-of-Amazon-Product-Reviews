@@ -13,8 +13,7 @@ from utils.embedding_vectoriser import MeanEmbeddingVectorizer
 from utils import get_clf_results, tune_model, save_model, load_model
 pd.set_option('display.width', 10000)
 pd.set_option('display.max_columns', 10000)
-logging.basicConfig(
-    format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 ## Load train and test data
 full_data = pd.read_csv('data/processed_data/proc_train.csv')
