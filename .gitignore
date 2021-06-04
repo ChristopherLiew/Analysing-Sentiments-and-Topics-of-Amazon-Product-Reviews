@@ -3,3 +3,4 @@ data
 models/word_embed/weights
 models/saved_models
 __pycache__
+.vscode
