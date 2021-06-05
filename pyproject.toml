@@ -27,6 +27,7 @@ bertviz = "^1.1.0"
 DateTime = "^4.3"
 python-Levenshtein = "^0.12.2"
 datasets = "^1.7.0"
+typer = "^0.3.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

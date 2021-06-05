@@ -1,4 +1,4 @@
-data
+data/
 .venv
 models/word_embed/weights
 models/saved_models
