@@ -1,7 +1,6 @@
 data/
+store/
+logs/
 .venv
-models/word_embed/weights
-models/saved_models
-__pycache__
 .vscode
-runs
+__pycache__

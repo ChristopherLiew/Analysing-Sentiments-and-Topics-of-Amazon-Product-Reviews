@@ -16,55 +16,56 @@ from datasets import load_dataset, load_metric
 from transformers import (
     AutoTokenizer,
     AutoModelForSequenceClassification,
-    AlbertConfig,  # Change for different models
+    DataCollatorWithPadding,
     Trainer,
     TrainingArguments,
     EvalPrediction
 )
+from pathlib import Path
 
 # Constants
 PRE_TRAINED_MODEL_NAME = 'albert-base-v2'
+ROOT = Path('data/processed_hf')
+MODEL_SAVE_DIR = Path('store/sent_clf_models')
 
+# Check system for GPU
 device = torch.device("cuda") if torch.cuda.is_available()\
      else torch.device("cpu")
 print(f'Device type: {device}')
 
+# Dataset filepaths
+data_files = dict()
+data_files['train'] = ROOT / 'train/train.csv'
+data_files['validation'] = ROOT / 'validation/validation.csv'
+data_files['test'] = ROOT / 'test/test.csv'
+
+
 # Load raw dataset and train-test split
-full_raw_datasets = load_dataset('csv',
-                                 data_files={'train':
-                                             'data/raw_data/raw_train.csv',
-                                             'val':
-                                             'data/raw_data/raw_test.csv'})
+datasets = load_dataset('csv', data_files=data_files)
 
-test_val_datasets = full_raw_datasets['val'].train_test_split(test_size=0.5)
-test_val_datasets['val'] = test_val_datasets['train']
-test_val_datasets.pop('train')
-all_datasets = test_val_datasets
-all_datasets['train'] = full_raw_datasets['train']
-
-# Preprocessing
+# Tokenizer and function
 tokenizer = AutoTokenizer.from_pretrained(PRE_TRAINED_MODEL_NAME)
 
 
-pretrained_config = AlbertConfig.from_pretrained(PRE_TRAINED_MODEL_NAME,
-                                                 num_labels=3,
-                                                 id2label={0: -1, 1: 0, 2: 1},
-                                                 label2id={-1: 0, 0: 1, 1: 2})
+def tokenize_function(examples: str, 
+                      text_col_name: str = 'text'):
 
-
-def tokenize_function(examples: str, text_col_name: str = 'text'):
     return tokenizer(examples[text_col_name],
                      padding='max_length',
                      truncation=True)
 
 
-tokenized_datasets = all_datasets.map(tokenize_function, batched=True)
+tokenized_datasets = datasets.map(
+    tokenize_function,
+    batched=True
+)
+
+# Data Collator with Padding (For Dynamic Padding)
+data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
 
 # Modelling
-model = AutoModelForSequenceClassification.from_pretrained(
-    PRE_TRAINED_MODEL_NAME,
-    config=pretrained_config
-    )
+model = AutoModelForSequenceClassification.from_pretrained(PRE_TRAINED_MODEL_NAME, 
+                                                           num_labels=3)
 
 # Metrics
 acc_metric = load_metric('accuracy')
@@ -74,6 +75,7 @@ rec_metric = load_metric("recall")
 
 
 def compute_metrics(eval_pred: EvalPrediction) -> Callable[[EvalPrediction], Dict]:
+    # Use glue
     logits, labels = eval_pred
     predictions = np.argmax(logits, axis=-1)
     metrics = {
@@ -93,8 +95,8 @@ def compute_metrics(eval_pred: EvalPrediction) -> Callable[[EvalPrediction], Dic
 
 
 # Training
-train_args = TrainingArguments(
-    output_dir='models/saved_models',
+training_args = TrainingArguments(
+    output_dir=MODEL_SAVE_DIR,
     evaluation_strategy='epoch',
     per_device_train_batch_size=32,
     per_device_eval_batch_size=32,
@@ -104,13 +106,15 @@ train_args = TrainingArguments(
 
 trainer = Trainer(
     model=model,
-    args=train_args,
+    args=training_args,
     train_dataset=tokenized_datasets['train'],
-    eval_dataset=tokenized_datasets['val'],
+    eval_dataset=tokenized_datasets['validation'],
+    data_collator=data_collator,
     compute_metrics=compute_metrics
 )
 
+# Train model
 trainer.train()
 
-# Simple Evaluation
+# Evaluate model
 trainer.evaluate()

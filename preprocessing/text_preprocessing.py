@@ -21,7 +21,6 @@ CONTRACTION_MAP = contractions.CONTRACTION_MAP
 def expand_contractions(text, contraction_mapping=CONTRACTION_MAP):
     contractions_pattern = re.compile('({})'.format('|'.join(contraction_mapping.keys())),
                                       flags=re.IGNORECASE | re.DOTALL)
-
     def expand_match(contraction):
         match = contraction.group(0)
         first_char = match[0]
@@ -30,7 +29,6 @@ def expand_contractions(text, contraction_mapping=CONTRACTION_MAP):
             else contraction_mapping.get(match.lower())
         expanded_contraction = first_char+expanded_contraction[1:]
         return expanded_contraction
-
     expanded_text = contractions_pattern.sub(expand_match, text)
     expanded_text = re.sub("'", "", expanded_text)
     return expanded_text
@@ -57,7 +55,10 @@ def custom_tokenizer(nlp):
 all_stopwords = stopwords.words('english')
 all_punctuation = string.punctuation
 
-def remove_stopwords(text, nlp, is_lower_case=True):
+def remove_stopwords(text, 
+                     nlp, 
+                     tokenize=True,
+                     is_lower_case=True):
     tokens = nlp(text)
     tokens = [token.text.strip() for token in tokens]
     if is_lower_case:
@@ -66,7 +67,10 @@ def remove_stopwords(text, nlp, is_lower_case=True):
     else:
         filtered_tokens = [token.lower() for token in tokens if token not in all_stopwords]
         filtered_tokens = [token for token in filtered_tokens if token not in all_punctuation]
-    return filtered_tokens
+    if tokenize:
+        return filtered_tokens
+    else:
+        return ' '.join(filtered_tokens)
 
 # 7. Correct apostrophe whitespaces
 def remove_apos_whitespace(text):
@@ -77,15 +81,21 @@ def remove_apos_whitespace(text):
     return text_result
 
 # 8. Complete pipeline
-def preprocess_text(data, remove_accented_char=True, contraction_expansion=True, normalize=True, correct_apos_whitespace=True, lemmatize=True, remove_special_char=True, stopword_removal=True):
-
+def preprocess_text(data, 
+                    remove_accented_char=True, 
+                    contraction_expansion=True, 
+                    normalize=True, 
+                    correct_apos_whitespace=True, 
+                    lemmatize=True, 
+                    remove_special_char=True, 
+                    stopword_removal=True,
+                    tokenize=True):
     processed_corpus = []
     corpus = data['reviews.text']
-    nlp = spacy.load("en_core_web_sm", 
+    nlp = spacy.load("en_core_web_sm",
                     disable=["attribute_ruler", "lemmatizer"])
     tokenizer = custom_tokenizer(nlp)
     nlp.tokenizer = tokenizer
-
     for text in tqdm(corpus):
         sleep(0.1)
         if remove_accented_char:
@@ -101,8 +111,6 @@ def preprocess_text(data, remove_accented_char=True, contraction_expansion=True,
         if lemmatize:
             text = lemmatize_text(text, nlp)
         if stopword_removal:
-            text = remove_stopwords(text,nlp)
-        
+            text = remove_stopwords(text, nlp, tokenize)
         processed_corpus.append(text)
-
     return processed_corpus
