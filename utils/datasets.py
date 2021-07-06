@@ -26,10 +26,11 @@ def create_tf_ds(X: pd.DataFrame, y: Optional[pd.DataFrame] = None,
         return ds
 
 
-def process_dataset_labels(df: pd.DataFrame, 
-                               label_col: str,
-                               mapping: Dict[str, str]
-                               ) -> pd.DataFrame:
+def process_dataset_labels(df: pd.DataFrame,
+                           mapping: Dict[str, str],
+                           label_col: str = 'reviews.rating',
+                           new_label_col: str = 'label'
+                           ) -> pd.DataFrame:
     """
     Converts sentiment labels into a suitable 0 indexed label for model training.
 
@@ -40,7 +41,7 @@ def process_dataset_labels(df: pd.DataFrame,
     Returns:
         pd.DataFrame: Processed training, validation or testing data.
     """
-    df[label_col] = df[label_col].map(mapping)
+    df[new_label_col] = df[label_col].map(mapping)
     return df
 
 
@@ -60,16 +61,17 @@ def create_model_dev_dir(data_filepaths: Dict[str, Union[str, pd.DataFrame]],
         their respective filepaths.
         output_filepath (str): Output filepath to save directory to.
     """
-    data_dir = Path(output_filepath)
-    train_dir = Path / 'train'
-    val_dir = Path / 'validation'
-    test_dir = Path / 'test'
+    cwd = os.getcwd()
+    data_dir = Path(os.path.join(cwd, output_filepath))
     
     # Create parent directory
-    os.mkdir(data_dir)
+    try:
+        os.mkdir(data_dir)
+    except FileExistsError:
+        pass
     
     # Read and process data
-    if isinstance(next(iter(set(v for v in data_filepaths))), str):
+    if isinstance(list(v for v in data_filepaths.values())[0], str):
         train_df = pd.read_csv(data_filepaths.get('train'))
         val_df = pd.read_csv(data_filepaths.get('validation'))
         test_df = pd.read_csv(data_filepaths.get('test'))
@@ -81,8 +83,9 @@ def create_model_dev_dir(data_filepaths: Dict[str, Union[str, pd.DataFrame]],
         )
     
     # Save and return output path
-    train_df.to_csv(train_dir / 'train.csv')
-    val_df.to_csv(val_dir / 'validation.csv')
-    test_df.to_csv(test_dir / 'test.csv')
+    
+    train_df.to_csv(data_dir / 'train.csv', index=False)
+    val_df.to_csv(data_dir / 'validation.csv', index=False)
+    test_df.to_csv(data_dir / 'test.csv', index=False)
     
     return data_dir

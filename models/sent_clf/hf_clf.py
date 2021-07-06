@@ -1,13 +1,6 @@
 # TBD
-# 1) Create a Typer CLI for this so that I can easily run
-# multiple different HF models
-# -> Given a model name, use regex to identify model type (ALBERT, XLNET ...)
-# -> Pull config and pass into SequenceClf obj
-# -> Process data and Train model
-# 2) Create custom metrics (F1-macro, etc)
-# 3) Train models on CoLab for GPU speed up
-# 4) Hyperparameter tuning
-# -> https://www.anyscale.com/blog/hyperparameter-search-hugging-face-transformers-ray-tune
+# 1) Create a Typer CLI for this so that I can easily train models
+# 2) Add in Accelerate
 
 import torch
 import numpy as np

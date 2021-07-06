@@ -1,6 +1,9 @@
 """
 Multinomial naive bayes sentiment classifier using processed amazon product review data.
 """
+# TBD:
+# 1) Refactor to suit new dataset format
+# 2) train and save fast text
 
 ## Import libraries
 import pandas as pd

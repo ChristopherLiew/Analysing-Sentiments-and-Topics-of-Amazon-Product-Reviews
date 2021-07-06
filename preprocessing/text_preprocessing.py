@@ -1,6 +1,7 @@
 import re
 import string
 import spacy
+import pandas as pd
 from tqdm import tqdm
 from time import sleep
 from nltk.corpus import stopwords
@@ -39,12 +40,6 @@ def remove_special_characters(text, remove_digits=False):
     text = re.sub(pattern, '', text)
     return text
 
-# 4. Lemmatisation of review text
-def lemmatize_text(text, nlp):
-    text = nlp(text)
-    text = ' '.join([word.lemma_ if word.lemma_ !='-PRON-' else word.text for word in text])
-    return text
-
 # 5. Tokenizer: Set nlp.tokenizer = custom_tokenizer(nlp)
 def custom_tokenizer(nlp):
     prefix_re = re.compile(r'(?<=[:;()[\]+.,!?\\-])[A-Za-z]')
@@ -55,10 +50,10 @@ def custom_tokenizer(nlp):
 all_stopwords = stopwords.words('english')
 all_punctuation = string.punctuation
 
-def remove_stopwords(text, 
-                     nlp, 
-                     tokenize=True,
-                     is_lower_case=True):
+def lemmatize_and_remove_stopwords(text,
+                                   nlp, 
+                                   tokenize=True,
+                                   is_lower_case=True):
     tokens = nlp(text)
     tokens = [token.text.strip() for token in tokens]
     if is_lower_case:
@@ -86,14 +81,13 @@ def preprocess_text(data,
                     contraction_expansion=True, 
                     normalize=True, 
                     correct_apos_whitespace=True, 
-                    lemmatize=True, 
                     remove_special_char=True, 
-                    stopword_removal=True,
+                    lemma_and_remove_stop_words=True,
                     tokenize=True):
     processed_corpus = []
     corpus = data['reviews.text']
-    nlp = spacy.load("en_core_web_sm",
-                    disable=["attribute_ruler", "lemmatizer"])
+    labels = data['reviews.rating']
+    nlp = spacy.load("en_core_web_sm")
     tokenizer = custom_tokenizer(nlp)
     nlp.tokenizer = tokenizer
     for text in tqdm(corpus):
@@ -108,9 +102,7 @@ def preprocess_text(data,
             text = expand_contractions(text)
         if normalize:
             text = text.lower()
-        if lemmatize:
-            text = lemmatize_text(text, nlp)
-        if stopword_removal:
-            text = remove_stopwords(text, nlp, tokenize)
+        if lemma_and_remove_stop_words:
+            text = lemmatize_and_remove_stopwords(text, nlp, tokenize)
         processed_corpus.append(text)
-    return processed_corpus
+    return pd.DataFrame({'reviews.text': processed_corpus, 'reviews.rating': labels})

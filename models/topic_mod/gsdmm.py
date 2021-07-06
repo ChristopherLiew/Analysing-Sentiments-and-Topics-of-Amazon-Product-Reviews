@@ -5,6 +5,10 @@ from gsdmm import MovieGroupProcess
 from gensim import corpora
 from utils import convert_to_lists
 
+# TBD:
+# 1) Refactor to suit new dataset format
+
+
 ### Split dataset into POS, NEG, NEU ###
 # Load existing ngram data from Topic_Modelling_LDA.py file:
 
