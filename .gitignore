@@ -1,6 +1,7 @@
 data/
 store/
 logs/
+conflict_detection
 .venv
 .vscode
 __pycache__

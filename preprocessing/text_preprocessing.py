@@ -1,4 +1,5 @@
 import re
+import numpy as np
 import string
 import spacy
 import pandas as pd
@@ -104,5 +105,8 @@ def preprocess_text(data,
             text = text.lower()
         if lemma_and_remove_stop_words:
             text = lemmatize_and_remove_stopwords(text, nlp, tokenize)
+        if text == '':
+            # Handle empty strings
+            text = np.nan
         processed_corpus.append(text)
-    return pd.DataFrame({'reviews.text': processed_corpus, 'reviews.rating': labels})
+    return pd.DataFrame({'reviews.text': processed_corpus, 'reviews.rating': labels}).dropna()

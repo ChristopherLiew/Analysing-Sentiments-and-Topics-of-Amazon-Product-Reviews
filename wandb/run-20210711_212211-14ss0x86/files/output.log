@@ -1,0 +1,170 @@
+
+>>>
+Automatic Weights & Biases logging enabled, to disable set os.environ["WANDB_DISABLED"] = "true"
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "/Users/MacBookPro15/Desktop/GitHub/Analysing-sentiments-and-topics-of-amazon-reviews/.venv/lib/python3.8/site-packages/transformers/trainer.py", line 1213, in train
+    self.control = self.callback_handler.on_train_begin(args, self.state, self.control)
+  File "/Users/MacBookPro15/Desktop/GitHub/Analysing-sentiments-and-topics-of-amazon-reviews/.venv/lib/python3.8/site-packages/transformers/trainer_callback.py", line 340, in on_train_begin
+    return self.call_event("on_train_begin", args, state, control)
+  File "/Users/MacBookPro15/Desktop/GitHub/Analysing-sentiments-and-topics-of-amazon-reviews/.venv/lib/python3.8/site-packages/transformers/trainer_callback.py", line 378, in call_event
+    result = getattr(callback, event)(
+  File "/Users/MacBookPro15/Desktop/GitHub/Analysing-sentiments-and-topics-of-amazon-reviews/.venv/lib/python3.8/site-packages/transformers/integrations.py", line 452, in on_train_begin
+    self.setup(args, state, model, **kwargs)
+  File "/Users/MacBookPro15/Desktop/GitHub/Analysing-sentiments-and-topics-of-amazon-reviews/.venv/lib/python3.8/site-packages/transformers/integrations.py", line 440, in setup
+    self._wandb.watch(
+  File "/Users/MacBookPro15/Desktop/GitHub/Analysing-sentiments-and-topics-of-amazon-reviews/.venv/lib/python3.8/site-packages/wandb/sdk/wandb_watch.py", line 94, in watch
+    graph = wandb.wandb_torch.TorchGraph.hook_torch(
+  File "/Users/MacBookPro15/Desktop/GitHub/Analysing-sentiments-and-topics-of-amazon-reviews/.venv/lib/python3.8/site-packages/wandb/wandb_torch.py", line 313, in hook_torch
+    graph.hook_torch_modules(model, criterion, graph_idx=graph_idx)
+  File "/Users/MacBookPro15/Desktop/GitHub/Analysing-sentiments-and-topics-of-amazon-reviews/.venv/lib/python3.8/site-packages/wandb/wandb_torch.py", line 368, in hook_torch_modules
+    raise ValueError(
+>>> # Callbacks
+>>> tb_cb = TensorBoardCallback()
+>>>
+>>>
+>>> trainer = Trainer(
+...     model=model,
+...     args=training_args,
+...     train_dataset=tokenized_datasets['train'],
+...     eval_dataset=tokenized_datasets['validation'],
+...     data_collator=data_collator,
+...     compute_metrics=compute_metrics,
+...     callbacks=[tb_cv]
+... )
+>>>
+Traceback (most recent call last):
+  File "<stdin>", line 8, in <module>
+NameError: name 'tb_cv' is not defined
+>>> trainer = Trainer(
+...     model=model,
+...     args=training_args,
+...     train_dataset=tokenized_datasets['train'],
+...     eval_dataset=tokenized_datasets['validation'],
+...     data_collator=data_collator,
+...     compute_metrics=compute_metrics,
+...     callbacks=[tb_cb]
+... )
+>>>
+You are adding a <class 'transformers.integrations.TensorBoardCallback'> to the callbacks of this Trainer, but there is already one. The currentlist of callbacks is
+:DefaultFlowCallback
+TensorBoardCallback
+WandbCallback
+>>> trainer = Trainer(
+...     model=model,
+...     args=training_args,
+...     train_dataset=tokenized_datasets['train'],
+...     eval_dataset=tokenized_datasets['validation'],
+...     data_collator=data_collator,
+...     compute_metrics=compute_metrics
+... )
+>>> trainer.train()
+>>>
+The following columns in the training set  don't have a corresponding argument in `AlbertForSequenceClassification.forward` and have been ignored: rating, text.
+***** Running training *****
+  Num examples = 22931
+  Num Epochs = 3
+  Instantaneous batch size per device = 32
+  Total train batch size (w. parallel, distributed & accumulation) = 32
+  Gradient Accumulation steps = 1
+  Total optimization steps = 2151
+Automatic Weights & Biases logging enabled, to disable set os.environ["WANDB_DISABLED"] = "true"
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "/Users/MacBookPro15/Desktop/GitHub/Analysing-sentiments-and-topics-of-amazon-reviews/.venv/lib/python3.8/site-packages/transformers/trainer.py", line 1213, in train
+    self.control = self.callback_handler.on_train_begin(args, self.state, self.control)
+  File "/Users/MacBookPro15/Desktop/GitHub/Analysing-sentiments-and-topics-of-amazon-reviews/.venv/lib/python3.8/site-packages/transformers/trainer_callback.py", line 340, in on_train_begin
+    return self.call_event("on_train_begin", args, state, control)
+  File "/Users/MacBookPro15/Desktop/GitHub/Analysing-sentiments-and-topics-of-amazon-reviews/.venv/lib/python3.8/site-packages/transformers/trainer_callback.py", line 378, in call_event
+    result = getattr(callback, event)(
+  File "/Users/MacBookPro15/Desktop/GitHub/Analysing-sentiments-and-topics-of-amazon-reviews/.venv/lib/python3.8/site-packages/transformers/integrations.py", line 452, in on_train_begin
+    self.setup(args, state, model, **kwargs)
+  File "/Users/MacBookPro15/Desktop/GitHub/Analysing-sentiments-and-topics-of-amazon-reviews/.venv/lib/python3.8/site-packages/transformers/integrations.py", line 440, in setup
+    self._wandb.watch(
+  File "/Users/MacBookPro15/Desktop/GitHub/Analysing-sentiments-and-topics-of-amazon-reviews/.venv/lib/python3.8/site-packages/wandb/sdk/wandb_watch.py", line 94, in watch
+    graph = wandb.wandb_torch.TorchGraph.hook_torch(
+  File "/Users/MacBookPro15/Desktop/GitHub/Analysing-sentiments-and-topics-of-amazon-reviews/.venv/lib/python3.8/site-packages/wandb/wandb_torch.py", line 313, in hook_torch
+    graph.hook_torch_modules(model, criterion, graph_idx=graph_idx)
+  File "/Users/MacBookPro15/Desktop/GitHub/Analysing-sentiments-and-topics-of-amazon-reviews/.venv/lib/python3.8/site-packages/wandb/wandb_torch.py", line 368, in hook_torch_modules
+    raise ValueError(
+
+>>> trainer.call
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+>>> trainer.callbacks
+>>> trainer.callbacks()
+>>>
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+
+
+>>> trainer
+<transformers.trainer.Trainer object at 0x7fd70f1e3c70>
+
+
+>>> trainer.callback_
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+>>> trainer.callbacks()
+>>> from transformers import (
+...     AutoTokenizer,
+...     AutoModelForSequenceClassification,
+...     DataCollatorWithPadding,
+...     Trainer,
+...     TrainingArguments,
+...     EvalPrediction,
+... )
+>>>
+PyTorch: setting up devices
+>>> # Training
+>>> training_args = TrainingArguments(
+...     output_dir=MODEL_SAVE_DIR,
+...     evaluation_strategy='epoch',
+...     per_device_train_batch_size=32,
+...     per_device_eval_batch_size=32,
+...     learning_rate=5e-5,
+...     weight_decay=0.01
+... )
+>>>
+>>> trainer = Trainer(
+...     model=model,
+...     args=training_args,
+...     train_dataset=tokenized_datasets['train'],
+...     eval_dataset=tokenized_datasets['validation'],
+...     data_collator=data_collator,
+...     compute_metrics=compute_metrics
+... )
+>>>
+The following columns in the training set  don't have a corresponding argument in `AlbertForSequenceClassification.forward` and have been ignored: rating, text.
+***** Running training *****
+  Num examples = 22931
+  Num Epochs = 3
+  Instantaneous batch size per device = 32
+  Total train batch size (w. parallel, distributed & accumulation) = 32
+  Gradient Accumulation steps = 1
+  Total optimization steps = 2151
+Automatic Weights & Biases logging enabled, to disable set os.environ["WANDB_DISABLED"] = "true"
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "/Users/MacBookPro15/Desktop/GitHub/Analysing-sentiments-and-topics-of-amazon-reviews/.venv/lib/python3.8/site-packages/transformers/trainer.py", line 1213, in train
+    self.control = self.callback_handler.on_train_begin(args, self.state, self.control)
+  File "/Users/MacBookPro15/Desktop/GitHub/Analysing-sentiments-and-topics-of-amazon-reviews/.venv/lib/python3.8/site-packages/transformers/trainer_callback.py", line 340, in on_train_begin
+    return self.call_event("on_train_begin", args, state, control)
+  File "/Users/MacBookPro15/Desktop/GitHub/Analysing-sentiments-and-topics-of-amazon-reviews/.venv/lib/python3.8/site-packages/transformers/trainer_callback.py", line 378, in call_event
+    result = getattr(callback, event)(
+  File "/Users/MacBookPro15/Desktop/GitHub/Analysing-sentiments-and-topics-of-amazon-reviews/.venv/lib/python3.8/site-packages/transformers/integrations.py", line 452, in on_train_begin
+    self.setup(args, state, model, **kwargs)
+  File "/Users/MacBookPro15/Desktop/GitHub/Analysing-sentiments-and-topics-of-amazon-reviews/.venv/lib/python3.8/site-packages/transformers/integrations.py", line 440, in setup
+    self._wandb.watch(
+  File "/Users/MacBookPro15/Desktop/GitHub/Analysing-sentiments-and-topics-of-amazon-reviews/.venv/lib/python3.8/site-packages/wandb/sdk/wandb_watch.py", line 94, in watch
+    graph = wandb.wandb_torch.TorchGraph.hook_torch(
+  File "/Users/MacBookPro15/Desktop/GitHub/Analysing-sentiments-and-topics-of-amazon-reviews/.venv/lib/python3.8/site-packages/wandb/wandb_torch.py", line 313, in hook_torch
+    graph.hook_torch_modules(model, criterion, graph_idx=graph_idx)
+  File "/Users/MacBookPro15/Desktop/GitHub/Analysing-sentiments-and-topics-of-amazon-reviews/.venv/lib/python3.8/site-packages/wandb/wandb_torch.py", line 368, in hook_torch_modules
+    raise ValueError(
+>>> trainer.train()
+
+>>> >>>
+KeyboardInterrupt
+
+>>> ^D

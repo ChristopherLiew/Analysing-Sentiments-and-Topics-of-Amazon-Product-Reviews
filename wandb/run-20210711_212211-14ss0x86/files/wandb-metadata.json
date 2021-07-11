@@ -1,0 +1,21 @@
+{
+    "os": "macOS-10.16-x86_64-i386-64bit",
+    "python": "3.8.2",
+    "heartbeatAt": "2021-07-11T13:22:18.594364",
+    "startedAt": "2021-07-11T13:22:11.192039",
+    "docker": null,
+    "cpu_count": 8,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "<python with no main file>",
+    "git": {
+        "remote": "https://github.com/ChristopherLiew/Analysing-sentiments-and-topics-of-amazon-reviews.git",
+        "commit": "cc09c1ab48d6dc4e6e249a674cfa4ae29783ac51"
+    },
+    "email": "52255272+ChristopherLiew@users.noreply.github.com",
+    "root": "/Users/MacBookPro15/Desktop/GitHub/Analysing-sentiments-and-topics-of-amazon-reviews",
+    "host": "DLSM-MacBook-Pro.local",
+    "username": "MacBookPro15",
+    "executable": "/Users/MacBookPro15/Desktop/GitHub/Analysing-sentiments-and-topics-of-amazon-reviews/.venv/bin/python"
+}
