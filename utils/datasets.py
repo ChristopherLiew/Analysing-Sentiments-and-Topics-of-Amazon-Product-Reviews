@@ -29,7 +29,7 @@ def create_tf_ds(X: pd.DataFrame, y: Optional[pd.DataFrame] = None,
 def process_dataset_labels(df: pd.DataFrame,
                            mapping: Dict[str, str],
                            label_col: str = 'reviews.rating',
-                           new_label_col: str = 'label'
+                           new_label_col: str = 'labels'
                            ) -> pd.DataFrame:
     """
     Converts sentiment labels into a suitable 0 indexed label for model training.

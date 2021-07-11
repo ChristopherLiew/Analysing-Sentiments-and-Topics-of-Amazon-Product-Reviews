@@ -34,7 +34,7 @@ wandb.init(project='amz-sent-analysis',
 # Constants
 PRE_TRAINED_MODEL_NAME = 'albert-base-v2'
 ROOT = Path('data/processed_hf')
-MODEL_SAVE_DIR = Path('store/sent_clf_models')
+MODEL_SAVE_DIR = Path('slogs/hf_clf')
 
 # Check system for GPU
 device = torch.device("cuda") if torch.cuda.is_available()\
@@ -50,9 +50,6 @@ data_files['test'] = str(ROOT / 'test.csv')
 
 # Load raw dataset and train-test split
 datasets = load_dataset('csv', data_files=data_files)
-
-# Rename dataset columns [Name of text col and name of label col]
-datasets = datasets.rename_column('label', 'labels')
 
 # Tokenizer and function
 tokenizer = AutoTokenizer.from_pretrained(PRE_TRAINED_MODEL_NAME)
@@ -107,7 +104,7 @@ def compute_metrics(eval_pred: EvalPrediction
 
 # Training
 training_args = TrainingArguments(
-    report_to='wandb',
+    report_to='logs/wandb',
     output_dir=MODEL_SAVE_DIR,
     overwrite_output_dir=True,
     evaluation_strategy='epoch',
