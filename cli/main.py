@@ -1,10 +1,10 @@
 import typer
-import models.sent_clf.hf_clf_cli as hf_sent_clf
+from models.sent_clf import hf_clf
 
 app = typer.Typer()
 # Dataset preparation
-# Huggingface Sentiment Clf
-app.add_typer(hf_sent_clf.app, name='hf-sent-clf')
+# Huggingface Sentiment Clf train + inference (predict)
+app.add_typer(hf_clf.app, name='hf-sent-clf')
 # SKLearn Sentiment Clf
 
 @app.command()
