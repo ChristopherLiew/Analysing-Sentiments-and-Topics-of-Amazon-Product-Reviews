@@ -1,14 +1,15 @@
 # TBD
-# 1) Add in Accelerate
+# 1) Add in artifact logging + metric logging to train and test workflows
 # 2) Figure out how to run remotely on colab
+
 import os
 import typer
 import torch
+import pandas as pd
 import numpy as np
 import wandb
 import logging
-from datetime import datetime
-from typing import Callable, Dict, List
+from typing import Callable, Dict, List, Optional
 from datasets import load_dataset, load_metric
 from transformers import (
     AutoTokenizer,
@@ -40,16 +41,16 @@ def train(
     wandb_proj_tags: List[str] = ['Test-Run', 'Albert-V2']
     ) -> None:
     """
-    Train a Hugging Face Sequence Classifer.
+    Train a Huggingface Sequence Classifer.
 
     Args:\n
         model_name (str): Name of a valid pre-trained hugging face model found on HF Hub.\n
         data_dir (str): Path to a data directory containing train, val and test data in\n
         in the following structure:\n
-        |__ data_dir\n
-            |__ train.csv\n
-            |__ test.csv\n
-            |__ validation.csv\n
+        └─── data_dir\n
+            ├─── train.csv\n
+            ├─── test.csv\n
+            └─── validation.csv\n
         num_labels (int): Number of labels (target classes).\n
         text_col (str): Name of column containing text for modelling.\n
         wandb_entity (str, optional): W and B username. Defaults to 'chrisliew'\n
@@ -62,23 +63,20 @@ def train(
     # Log into W&B
     wandb.login()
 
-    # Format run name
-    run_name = wandb_proj_name + '-' + str(datetime.now())
-
     # Initialize W and B run
     # see: https://docs.wandb.ai/guides/integrations/huggingface#getting-started-track-and-save-your-models
     os.environ['WANDB_LOG_MODEL'] = 'true'  # Logs model as an artifact
     os.environ['WANDB_WATCH'] = 'all'  # Logs Gradients and Params
-    wandb.init(project=wandb_proj_name,
-               name=run_name,
-               tags=wandb_proj_tags,
-               entity=wandb_entity)
-
+    run = wandb.init(project=wandb_proj_name,
+                    name=wandb_run_name,
+                    tags=wandb_proj_tags,
+                    entity=wandb_entity)
+    
     # Constants
     PRE_TRAINED_MODEL_NAME = model_name
     ROOT = Path(data_dir)
     MODEL_SAVE_DIR = Path('logs/hf_clf')
-
+     
     # Check system for GPU
     device = torch.device("cuda") if torch.cuda.is_available()\
         else torch.device("cpu")
@@ -90,11 +88,26 @@ def train(
     data_files['train'] = str(ROOT / 'train.csv')
     data_files['validation'] = str(ROOT / 'validation.csv')
     data_files['test'] = str(ROOT / 'test.csv')
-
+    
     # Load raw dataset and train-test split
-    logging.info(f'loading train, val and test data from {data_files}')
-    datasets = load_dataset('csv', data_files=data_files)
-
+    typer.echo(f'loading train, val and test data from {data_files}')
+    datasets = load_dataset('csv', data_files=data_files)    
+    
+    # Log datasets as Artifacts to W and B
+    typer.echo(f'Logging train, val and test datasets to W and B:')
+    ds_artifact = wandb.Artifact(
+        name='amz_product_reviews_datasets',  # Change to data_dir filename
+        type='datasets',
+        description="""Processed train, val and test data 
+            for hugging face sequence clf models.""",
+        metadata={
+            "sizes": [v.num_rows for k, v in datasets.items()]
+        }
+    )
+    for name, fp in data_files.items():
+        ds_artifact.add_file(fp, name=name)
+    run.log_artifact(ds_artifact)
+    
     # Load Tokenizer and Tokenize
     tokenizer = AutoTokenizer.from_pretrained(PRE_TRAINED_MODEL_NAME)
 
@@ -161,7 +174,7 @@ def train(
         weight_decay=0.01,
         logging_steps=100,
         remove_unused_columns=True,
-        run_name=wandb_run_name  # Turn into argument for CLI
+        run_name=wandb_run_name
     )
 
     # Callbacks
@@ -193,26 +206,60 @@ def train(
 
 
 
-# Model Inference
-# @app.command()
-# def predict(test_data: str,
-#             wandb_proj_name: str,
-#             wandb_model_name: str
-#             ):
-#     pass
+# Model Inference (TB tested and refined)
+@app.command()
+def predict(model_name: Optional[str],  # Check if we can infer from model artifact
+            wandb_proj_name: str,
+            wandb_run_name: str,
+            num_labels: int,  # Check if we can infer this from the configs
+            inf_data: Optional[str] = None,
+            text_col: Optional[str] = 'text'
+            ):
+    """
+    Perform inference using the latest huggingface classifier trained on a given
+    set of test data.
 
-# with wandb.init(project='amz-sent-analysis') as run:
+    Args:\n
+        inf_data (Optional[str]): Path to test data. If None, will pull latest test data artifact fro W and B.\n
+        model_name (Optional[str]): Name of huggingface model used (Must be a valid HF Hub model) that
+        is consistent with the models trained and stored in the given W and B project and run.\n
+        wandb_proj_name (str): W and B project name to pull model and data from.\n
+        wandb_run_name (str): W and B run name within the project.\n
+        num_labels (int): Number of labels.\n
+        text_col (Optional[str]): Name of text column. Defaults to 'text'.\n
+    
+    Returns:\n
+        List[...]: Huggingface sequence classifier inference output.
+    """
 
-#   # Connect an Artifact to the run
-#   my_model_name = "amz-pdt-reviews-sent-clf:latest"
-#   my_model_artifact = run.use_artifact(my_model_name)
-
-#   # Download model weights to a folder and return the path
-#   model_dir = my_model_artifact.download()
-
-#   # Load your Hugging Face model from that folder
-#   #  using the same model class
-#   model = AutoModelForSequenceClassification.from_pretrained(
-#       model_dir, num_labels=num_labels)
-
-#   # Do additional training, or run inference
+    with wandb.init(project=wandb_proj_name) as run:
+        
+        # Load latest trained model
+        my_model_name = f"{wandb_run_name}:latest"
+        my_model_artifact = run.use_artifact(my_model_name)
+        model_dir = my_model_artifact.download()
+        
+        model = AutoModelForSequenceClassification.from_pretrained(
+            model_dir, 
+            num_labels=num_labels)
+        
+        # Load and process test data (Pull latest test data else load and process)
+        if inf_data is not None:
+            assert model_name is not None, 'Please provide the corresponding model name'
+            test_data = load_dataset('csv', data_files=inf_data)
+            
+            # Preprocess data
+            tokenizer = AutoTokenizer(model_name)
+            tokenized_test_data = tokenizer(
+                test_data[text_col],
+                truncation=True,
+                padding='max_length'
+            )
+            output = model(**tokenized_test_data)
+        
+        else:
+            # TBD
+            # test_ds = run.use_artifact('amz_product_reviews_datasets/test')
+            pass
+        # Process results
+        return output
