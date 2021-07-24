@@ -39,6 +39,7 @@ sentence-transformers = "^2.0.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
+flake8 = "^3.9.2"
 
 [tool.poetry.scripts]
 # CLI for sentiment classification
