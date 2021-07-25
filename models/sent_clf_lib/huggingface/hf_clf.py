@@ -12,7 +12,7 @@ import torch
 import wandb
 import numpy as np
 from datetime import datetime
-from typing import List, Optional, Tuple, Union
+from typing import List, Dict, Optional, Tuple, Union
 from datasets import load_dataset
 from transformers import (
     AutoTokenizer,
@@ -23,18 +23,14 @@ from transformers import (
 )
 from transformers.integrations import TensorBoardCallback
 from pathlib import Path
-from utils.hf_clf import (
-    get_data_files,
-    compute_clf_metrics,
-    InferenceDataset
-)
+from utils.hf_clf import get_data_files, compute_clf_metrics, InferenceDataset
 
 # Instatiate Typer App
 app = typer.Typer()
 
 
 WANDB_RUN_NAME = "amz-hf-sent-clf_" + str(datetime.now())
-WANDB_HF_PROJ_TAGS = ["Test-Run", 'HuggingFace']
+WANDB_HF_PROJ_TAGS = ["Test-Run", "HuggingFace"]
 
 
 @app.command()  # Add in Typer Options (Argument with a flag) with Prompt
@@ -66,8 +62,7 @@ def train(
         wandb_run_name (str, optional): W and B run name. Defaults to 'amz-hf-sent-clf'.
         wandb_proj_tags (List[str], optional): W and B project tags. Defaults to ['Test-Run', 'Albert-V2'].
     """
-    typer.echo(
-        f"Training a {model_name} Sequence Classifier on data from {data_dir}")
+    typer.echo(f"Training a {model_name} Sequence Classifier on data from {data_dir}")
 
     # Log into W&B
     wandb.login()
@@ -86,7 +81,7 @@ def train(
         name=wandb_run_name,
         tags=wandb_proj_tags,
         entity=wandb_entity,
-        job_type='training'
+        job_type="training",
     )
 
     # Constants
@@ -169,8 +164,8 @@ def train(
         eval_dataset=tokenized_datasets["validation"],
         data_collator=data_collator,
         compute_metrics=compute_clf_metrics,
-        callbacks=[tb_cb],
-    )
+        callbacks=[tb_cb]
+        )
 
     # Train model
     typer.secho("Starting up model training ...", fg=typer.colors.YELLOW)
@@ -195,7 +190,7 @@ def predict(
     wandb_proj_name: str = "amz-sent-analysis",
     num_labels: int = 3,
     inf_data: Optional[Dict[str, str]] = None,
-    text_col: Optional[str] = "text",
+    text_col: Optional[str] = "text"
 ) -> Tuple[List[Union[int, float]], List[Union[int, float]]]:
     """
     Performs inference on a given set of test data using the latest fine tuned or
@@ -214,7 +209,7 @@ def predict(
         List[...]: Huggingface sequence classifier inference output.
     """
 
-    with wandb.init(project=wandb_proj_name, job_type='inference') as run:
+    with wandb.init(project=wandb_proj_name, job_type="inference") as run:
 
         # Load latest trained model (To be tested)
         my_model_name = f"{wandb_run_name}:latest"

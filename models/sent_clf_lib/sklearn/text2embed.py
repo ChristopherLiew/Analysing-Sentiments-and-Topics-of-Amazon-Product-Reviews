@@ -7,10 +7,7 @@ import pandas as pd
 from pathlib import Path
 from gensim import downloader
 from gensim.models import KeyedVectors
-from utils.embedding_vectoriser import (
-    MeanEmbeddingVectorizer,
-    TfidfEmbeddingVectorizer
-)
+from utils.embedding_vectoriser import MeanEmbeddingVectorizer, TfidfEmbeddingVectorizer
 from utils.logging import logger
 
 # Instatiate Typer App
@@ -18,8 +15,11 @@ app = typer.Typer()
 
 
 # TBD:
-# Add in tokenization and preprocessing
-@app.command
+# Run a full test
+# Add in tokenization and preprocessing (KIV)
+
+
+@app.command()
 def preprocess(
     data_dir: str,
     output_dir: str,
@@ -85,5 +85,5 @@ def preprocess(
         f"""Written train, val and test datasets to {output_dir}
                  with embeddings in the 'embed' column"""
     )
-    
+
     return datasets

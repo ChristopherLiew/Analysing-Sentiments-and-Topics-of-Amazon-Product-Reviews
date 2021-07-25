@@ -4,7 +4,8 @@ Huggingface Sequence Classifier Helper / Utility Functions.
 import numpy as np
 from typing import (
     Callable,
-    Dict
+    Dict,
+    Any
 )
 from datasets import (
     load_metric
@@ -28,25 +29,24 @@ def compute_clf_metrics(eval_pred: EvalPrediction
                         ) -> Callable[[EvalPrediction], Dict]:
 
     logits, labels = eval_pred
+    predictions = np.argmax(logits, axis=1)
+    metrics = dict()
 
-    predictions = np.argmax(logits, axis=-1)
+    metrics['accuracy'] = acc_metric.compute(predictions=predictions,
+                                             references=labels)
 
-    metrics = {
-        'accuracy': acc_metric.compute(predictions=predictions,
-                                       references=labels),
+    metrics['f1'] = f1_metric.compute(predictions=predictions,
+                                      references=labels,
+                                      average='macro')
 
-        'f1': f1_metric.compute(predictions=predictions,
-                                references=labels,
-                                average='macro'),
+    metrics['precision'] = prec_metric.compute(predictions=predictions,
+                                               references=labels,
+                                               average='macro')
 
-        'precision': prec_metric.compute(predictions=predictions,
-                                         references=labels,
-                                         average='macro'),
+    metrics['recall'] = rec_metric.compute(predictions=predictions,
+                                           references=labels,
+                                           average='macro')
 
-        'recall': rec_metric.compute(predictions=predictions,
-                                     references=labels,
-                                     average='macro')
-    }
     return metrics
 
 
@@ -66,16 +66,16 @@ def get_data_files(data_dir_root: Path,
 
 
 class InferenceDataset(Dataset):
-    def __init__(self, encodings, labels=None):
+    def __init__(self, encodings, labels=None) -> None:
         self.encodings = encodings
         self.labels = labels
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx) -> Dict[str, Any]:
         item = {key: torch.tensor(val[idx]) for key, val
                 in self.encodings.items()}
         if self.labels:
             item["labels"] = torch.tensor(self.labels[idx])
         return item
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.encodings["input_ids"])
