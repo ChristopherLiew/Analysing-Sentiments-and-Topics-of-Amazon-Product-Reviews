@@ -4,14 +4,13 @@ import pickle
 from numpy.core.records import array
 import pandas as pd
 from time import sleep
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 from sklearn.base import BaseEstimator
 from ast import literal_eval
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.metrics import multilabel_confusion_matrix, classification_report
 from gensim import models
 from tensorflow.keras import utils
-from tensorflow import data
 
 
 def get_clf_results(y_true: array, y_pred: array) -> pd.DataFrame:
@@ -25,9 +24,14 @@ def tune_model(model: BaseEstimator, data: pd.DataFrame,
                n_jobs: int = -1) -> Tuple:
 
     tuner = RandomizedSearchCV(
-        model, search_params, verbose=verbosity, n_jobs=n_jobs)
+        model,
+        search_params,
+        verbose=verbosity,
+        n_jobs=n_jobs)
+
     train_data, train_labels = data
     search = tuner.fit(train_data, train_labels)
+
     return search.best_estimator_, search.best_score_, search.best_params_
 
 
@@ -64,23 +68,6 @@ def create_trigrams(bigrams: List[str], min_count: int = 5) -> List:
     trigram = models.Phrases(bigrams, min_count)
     trigram_mod = models.phrases.Phraser(trigram)
     return [trigram_mod[doc] for doc in bigrams]
-
-
-def create_tf_ds(X: pd.DataFrame, y: Optional[pd.DataFrame] = None,
-                 shuffle: bool = True) -> data.Dataset:
-    if y:
-        # convert labels into one_hot_encoded labels
-        y = utils.to_categorical(y)
-        ds = data.Dataset.from_tensor_slices((X, y))
-        if shuffle:
-            # Buffer Size = Size of DS for perfect shuffling
-            return ds.shuffle(len(ds))
-        return ds
-    else:
-        ds = data.Dataset.from_tensor_slices(X)
-        if shuffle:
-            return ds.shuffle((len(ds)))
-        return ds
 
 
 def get_log_dir() -> str:

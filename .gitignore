@@ -1,7 +1,9 @@
-data/
+data/*
+store/*
+logs/*
+wandb/*
+trained_models/*
+artifacts/*
 .venv
-models/word_embed/weights
-models/saved_models
-__pycache__
 .vscode
-runs
+__pycache__
