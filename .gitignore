@@ -1,8 +1,9 @@
-data/
-store/
+data/*
+store/*
 logs/*
-wandb/
-models/conflict_detection
+wandb/*
+trained_models/*
+artifacts/*
 .venv
 .vscode
 __pycache__

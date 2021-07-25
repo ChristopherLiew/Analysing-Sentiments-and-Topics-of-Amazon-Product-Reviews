@@ -24,9 +24,14 @@ def tune_model(model: BaseEstimator, data: pd.DataFrame,
                n_jobs: int = -1) -> Tuple:
 
     tuner = RandomizedSearchCV(
-        model, search_params, verbose=verbosity, n_jobs=n_jobs)
+        model,
+        search_params,
+        verbose=verbosity,
+        n_jobs=n_jobs)
+
     train_data, train_labels = data
     search = tuner.fit(train_data, train_labels)
+
     return search.best_estimator_, search.best_score_, search.best_params_
 
 

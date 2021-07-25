@@ -1,6 +1,10 @@
 """
 Random forest sentiment classifier using processed amazon product review data.
 """
+# 1) Create CLI for training and inference
+# - Process Training Data
+# - Train Model + Log results
+# - Make inference + Log eval results
 
 ## Import libraries
 import pandas as pd

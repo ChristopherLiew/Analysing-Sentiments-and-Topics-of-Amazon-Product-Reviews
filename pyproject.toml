@@ -36,6 +36,8 @@ typer = {extras = ["all"], version = "^0.3.2"}
 jupyterlab = "^3.0.16"
 wandb = "^0.10.33"
 sentence-transformers = "^2.0.0"
+black = "^21.7b0"
+rich = "^10.6.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
