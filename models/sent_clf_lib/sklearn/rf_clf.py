@@ -35,7 +35,7 @@ DEFAULT_RF_PARAMS_GRID = {
 def train(
     data_dir: str,
     embeds_col: str = "embeds",
-    hyperparam_grid: Dict[str, List[Any]] = DEFAULT_RF_PARAMS_GRID,
+    hyperparam_grid = DEFAULT_RF_PARAMS_GRID,
     wandb_entity: str = "chrisliew",
     wandb_proj_name: str = "amz-sent-analysis-classical-ml",
     wandb_run_name: str = WANDB_RUN_NAME,

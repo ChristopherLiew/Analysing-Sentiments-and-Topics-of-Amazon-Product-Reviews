@@ -12,7 +12,7 @@ import torch
 import wandb
 import numpy as np
 from datetime import datetime
-from typing import List, Dict, Optional, Tuple, Union
+from typing import Any, List, Dict, Optional, Tuple, Union
 from datasets import load_dataset
 from transformers import (
     AutoTokenizer,
@@ -187,9 +187,9 @@ def predict(
     model_name: Optional[str],
     wandb_run_name: str,
     wandb_entity: str = "chrisliew",
-    wandb_proj_name: str = "amz-sent-analysis",
+    wandb_proj_name: str = "amz-sent-analysis-deep-learning",
     num_labels: int = 3,
-    inf_data: Optional[Dict[str, str]] = None,
+    inf_data = None,  # Typer cannot support Any and Nested Dicts
     text_col: Optional[str] = "text"
 ) -> Tuple[List[Union[int, float]], List[Union[int, float]]]:
     """
