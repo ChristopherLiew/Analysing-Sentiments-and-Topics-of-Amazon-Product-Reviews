@@ -8,7 +8,7 @@ import pandas as pd
 from pathlib import Path
 from gensim import downloader as api
 from gensim.models import KeyedVectors
-from gensim.models.fasttext import load_facebook_vectors
+from gensim.models.fasttext import FastText, load_facebook_vectors
 from utils.embedding_vectoriser import (
     MeanEmbeddingVectorizer,
     TfidfEmbeddingVectorizer
@@ -56,7 +56,7 @@ def create_embeds(
             else:
                 embed_model = KeyedVectors.load_word2vec_format(
                     pretrained_embed_dir,
-                    binary=True
+                    binary=False
                 )
 
         elif embed_type == "ft":
@@ -68,10 +68,7 @@ def create_embeds(
                 embed_model = api.load("fasttext-wiki-news-subwords-300")
 
             else:
-                embed_model = KeyedVectors.load_word2vec_format(
-                    pretrained_embed_dir,
-                    binary=False
-                )
+                embed_model = FastText.load(pretrained_embed_dir)
 
         else:
             raise ValueError("Please specify a valid embedding type - w2v or ft")
@@ -93,7 +90,7 @@ def create_embeds(
             into vectorised embeddings"""
         )
 
-        dataset["embeds"] = vec_embed_model.fit_transform(dataset)
+        dataset["embeds"] = list(vec_embed_model.fit_transform(dataset))
         datasets[dataset_name] = dataset
         dataset.to_csv(output_root_dir / (dataset_name + ".csv"))
 

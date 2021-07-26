@@ -25,7 +25,7 @@ class MeanEmbeddingVectorizer(TransformerMixin):
                 # Numpy zeros if None/ NaN reviews
                 doc = np.mean([self.model[word] for word in orig_doc if word in self.model.vocab] or [np.zeros(self.vector_dims)], axis=0)
             else:
-                doc = np.mean([self.model[word] for word in orig_doc] or [np.zeros(self.vector_dims)], axis=0)
+                doc = np.mean([self.model.wv[word] for word in orig_doc] or [np.zeros(self.vector_dims)], axis=0)
             new_corpus.append(doc)
             progress_bar.update(1)
         progress_bar.close()
