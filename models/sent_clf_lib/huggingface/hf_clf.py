@@ -184,13 +184,12 @@ def train(
 # Model Inference (Adapt to allow local model loading)
 @app.command()
 def predict(
-    model_name: Optional[str],
-    wandb_run_name: str,
+    model_name: Optional[str] = None,
     wandb_entity: str = "chrisliew",
     wandb_proj_name: str = "amz-sent-analysis-deep-learning",
     num_labels: int = 3,
     inf_data = None,  # Typer cannot support Any and Nested Dicts
-    text_col: Optional[str] = "text"
+    text_col: str = "text"
 ) -> Tuple[List[Union[int, float]], List[Union[int, float]]]:
     """
     Performs inference on a given set of test data using the latest fine tuned or
@@ -212,7 +211,7 @@ def predict(
     with wandb.init(project=wandb_proj_name, job_type="inference") as run:
 
         # Load latest trained model (To be tested)
-        my_model_name = f"{wandb_run_name}:latest"
+        my_model_name = f"{wandb_proj_name}:latest"
         my_model_artifact = run.use_artifact(my_model_name)
         model_dir = my_model_artifact.download()
 

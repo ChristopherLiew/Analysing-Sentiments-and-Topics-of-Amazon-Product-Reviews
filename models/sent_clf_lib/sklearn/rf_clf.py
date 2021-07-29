@@ -4,12 +4,13 @@ Random forest sentiment classifier using processed amazon product review data.
 # 1) Add in inference code with W&B
 # 2) Run a full test
 
-from utils.hf_clf import get_data_files
 import typer
 import wandb
-from typing import List, Dict, Any
+import click_spinner as cs
+from typing import List, Dict, Any, Optional
 import joblib
 import pandas as pd
+import numpy as np
 from pathlib import Path
 from datetime import datetime
 from sklearn.ensemble import RandomForestClassifier
@@ -48,9 +49,9 @@ def train(
         data_dir (str): Path to a data directory containing train, val and test data in\n
         in the following structure:\n
         └─── data_dir\n
-            ├─── train.csv\n
-            ├─── test.csv\n
-            └─── validation.csv\n
+            ├─── train.json\n
+            ├─── test.json\n
+            └─── validation.json\n
         embeds_col (str): Name of column containing vectorised word embeddings for modelling.\n
         wandb_entity (str, optional): W and B username. Defaults to 'chrisliew'\n
         wandb_proj_name (str, optional): W and B project name. Defaults to 'amz-sent-analysis'.\n
@@ -74,37 +75,40 @@ def train(
     # Constants
     ROOT = Path(data_dir)
     MODEL_SAVE_DIR = Path("logs/rf_clf")
-    data_files = get_data_files(ROOT)
+    data_files = get_data_files(ROOT, format='json')
 
     # Get data
     datasets = dict()
-    datasets["train"] = pd.read_csv(ROOT / "train.csv")
-    datasets["validation"] = pd.read_csv(ROOT / "validation.csv")
-    datasets["test"] = pd.read_csv(ROOT / "test.csv")
+    datasets["train"] = pd.read_json(ROOT / "train.json")
+    datasets["validation"] = pd.read_json(ROOT / "validation.json")
+    datasets["test"] = pd.read_json(ROOT / "test.json")
 
     # Log data to W&B
-    typer.echo("logging train, val and test datasets to W and B:")
+    typer.secho("Logging train, val and test datasets to W and B:",
+                fg=typer.colors.YELLOW)
 
     ds_artifact = wandb.Artifact(
         name=wandb_proj_name + "_datasets",
         type="datasets",
         description="""Processed train, val and test data
             for random forest sequence clf models.""",
-        metadata={"sizes": [v.num_rows for k, v in datasets.items()]},
+        metadata={"sizes": [len(v) for k, v in datasets.items()]},
     )
 
     for name, fp in data_files.items():
-        ds_artifact.add_file(fp, name=name + ".csv")
+        ds_artifact.add_file(fp, name=name + ".json")
     run.log_artifact(ds_artifact)
 
     # Get embeddings and labels
     X_train, y_train = (
-        literal_eval(datasets["train"][embeds_col]),
+        [embeddings
+         for _, embeddings in datasets["train"][embeds_col].iteritems()],
         datasets["train"]["labels"],
     )
 
     X_val, y_val = (
-        literal_eval(datasets["validation"][embeds_col]),
+        [embeddings
+         for _, embeddings in datasets["validation"][embeds_col].iteritems()],
         datasets["validation"]["labels"],
     )
 
@@ -112,20 +116,20 @@ def train(
 
     typer.echo('Performing hyperparam tuning with Randomized Search CV')
 
-    rf_clf_optimal, rf_clf_score, rf_clf_params = tune_model(
-        RandomForestClassifier(),
-        (X_train.toarray(), y_train),
-        search_params=hyperparam_grid,
-    )
+    with cs.spinner():
+        rf_clf_optimal, rf_clf_score, rf_clf_params = tune_model(
+            RandomForestClassifier(),
+            (np.array(X_train), y_train),
+            search_params=hyperparam_grid,
+        )
 
-    typer.secho(f"""Best RF model has the optimal hyparams of: {rf_clf_params}
-                and a score of {rf_clf_score}""",
+    typer.secho(f"""Best RF model has the optimal hyparams of: {rf_clf_params} and a score of {rf_clf_score}""",
                 fg=typer.colors.GREEN)
 
-    y_probas = rf_clf_optimal.predict_proba(X_val)
+    y_probas = rf_clf_optimal.predict_proba(np.array(X_val))
+    y_pred = rf_clf_optimal.predict(np.array(X_val))
 
     # Run validation
-
     typer.echo('Logging classification charts to W&B')
 
     wandb.sklearn.plot_classifier(
@@ -134,8 +138,11 @@ def train(
         X_val,
         y_train,
         y_val,
+        y_pred,
         y_probas,
         labels=["negative", "neutral", "positive"],
+        model_name='RANDOM FOREST SEQUENCE CLASSIFIER',
+        feature_names=None
     )
 
     # Save and log model to W&B
@@ -147,19 +154,32 @@ def train(
     joblib.dump(rf_clf_optimal, rf_model_save_path)
 
     trained_model_artifact = wandb.Artifact(
-        "Random Forest Sentiment Classifier",
+        wandb_proj_name + "_rf_model",
         type="model",
         description="Trained random forest classifier for sentiment analysis",
     )
 
-    trained_model_artifact.add_dir(MODEL_SAVE_DIR)
+    trained_model_artifact.add_file(str(rf_model_save_path))
     run.log(trained_model_artifact)
 
-    typer.secho('Training complete', fg=typer.colors.GREEN)
+    wandb.finish()
 
-@app.command
-def predict():
-    pass
-    # Pull latest model or selected model
-    # Make prediction (inference)
-    # Log results
+    typer.secho('Training complete!', fg=typer.colors.GREEN)
+
+
+@app.command()
+def predict(
+    wandb_entity: Optional[str] = None,
+    wandb_proj_name: str = 'amz-sent-analysis-classical-ml',
+    inf_data = None,
+    embeds_col: str = "embeds"
+):
+    with wandb.init(entity=wandb_entity, project=wandb_proj_name, job_type="inference") as run:
+        my_model_name = f"{wandb_proj_name}_rf_model:latest"
+        my_model_artifact = run.use_artifact(my_model_name)
+        model_dir = my_model_artifact.download()
+        model = joblib.load(model_dir)
+
+        y_pred = model.predict(inf_data[embeds_col])
+
+        return y_pred

@@ -92,7 +92,7 @@ def create_embeds(
 
         dataset["embeds"] = list(vec_embed_model.fit_transform(dataset))
         datasets[dataset_name] = dataset
-        dataset.to_csv(output_root_dir / (dataset_name + ".csv"))
+        dataset.to_json(output_root_dir / (dataset_name + ".json"))
 
     logger.info(
         f"""Written train, val and test datasets to {output_dir}
