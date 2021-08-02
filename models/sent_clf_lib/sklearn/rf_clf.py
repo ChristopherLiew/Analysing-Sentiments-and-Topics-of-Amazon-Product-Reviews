@@ -7,14 +7,13 @@ Random forest sentiment classifier using processed amazon product review data.
 import typer
 import wandb
 import click_spinner as cs
-from typing import List, Dict, Any, Optional
+from typing import List, Optional
 import joblib
 import pandas as pd
 import numpy as np
 from pathlib import Path
 from datetime import datetime
 from sklearn.ensemble import RandomForestClassifier
-from ast import literal_eval
 from utils import tune_model
 from utils.hf_clf import get_data_files
 
@@ -24,7 +23,7 @@ app = typer.Typer()
 
 
 WANDB_RUN_NAME = "amz-rf-sent-clf_" + str(datetime.now())
-WANDB_HF_PROJ_TAGS = ["Test-Run", "Random Forest"]
+WANDB_RF_PROJ_TAGS = ["Test-Run", "Random Forest"]
 DEFAULT_RF_PARAMS_GRID = {
     "n_estimators": [100, 200, 300],
     "max_depth": [2, 3, 4],
@@ -40,7 +39,7 @@ def train(
     wandb_entity: str = "chrisliew",
     wandb_proj_name: str = "amz-sent-analysis-classical-ml",
     wandb_run_name: str = WANDB_RUN_NAME,
-    wandb_proj_tags: List[str] = WANDB_HF_PROJ_TAGS,
+    wandb_proj_tags: List[str] = WANDB_RF_PROJ_TAGS,
 ) -> None:
     """
     Train a Random Forest Classifer.
@@ -146,7 +145,6 @@ def train(
     )
 
     # Save and log model to W&B
-
     typer.secho('Saving model locally and pushing model artifact to W&B',
                 fg=typer.colors.BRIGHT_YELLOW)
 
@@ -159,11 +157,10 @@ def train(
         description="Trained random forest classifier for sentiment analysis",
     )
 
-    trained_model_artifact.add_file(str(rf_model_save_path))
+    trained_model_artifact.add_dir(MODEL_SAVE_DIR,
+                                   name="random_forest_models")  # ValueError
     run.log(trained_model_artifact)
-
     wandb.finish()
-
     typer.secho('Training complete!', fg=typer.colors.GREEN)
 
 
@@ -171,15 +168,31 @@ def train(
 def predict(
     wandb_entity: Optional[str] = None,
     wandb_proj_name: str = 'amz-sent-analysis-classical-ml',
-    inf_data = None,
+    inf_data_path: Optional[str] = None,
     embeds_col: str = "embeds"
 ):
+    # This function should pull latest model or specific model artifact
+    # Then take in test data or pull latest or specific test data
+    # and run inference -> Return predictions
     with wandb.init(entity=wandb_entity, project=wandb_proj_name, job_type="inference") as run:
-        my_model_name = f"{wandb_proj_name}_rf_model:latest"
+        # Pull latest model
+        typer.secho('Pulling latest model from W&B', fg=typer.colors.YELLOW)
+        my_model_name = f"{wandb_proj_name}_rf_model:latest"  # ADD IN FUNC to pull specific model
         my_model_artifact = run.use_artifact(my_model_name)
         model_dir = my_model_artifact.download()
         model = joblib.load(model_dir)
 
-        y_pred = model.predict(inf_data[embeds_col])
+        # Load test data
+        test_data = pd.read_csv(inf_data_path)
 
-        return y_pred
+        # Make predictions
+        typer.secho(
+            f'Making predictions using test dataset from {inf_data_path}',
+            fg=typer.colors.YELLOW)
+
+        y_pred = model.predict(test_data[embeds_col])
+        y_true = test_data["label"]
+
+        run.finish()
+
+        return y_true, y_pred

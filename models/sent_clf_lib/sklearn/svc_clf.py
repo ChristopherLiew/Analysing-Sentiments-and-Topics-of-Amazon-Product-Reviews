@@ -1,193 +1,201 @@
 """
-Support vector sentiment classifier using processed amazon product review data.
+Random forest sentiment classifier using processed amazon product review data.
 """
+# 1) Add in inference code with W&B
+# 2) Run a full test
 
-## Import libraries
+import typer
+import wandb
+import click_spinner as cs
+from typing import List, Optional
+import joblib
 import pandas as pd
-import logging
-from joblib import dump, load
-from gensim import downloader
-from gensim.models import KeyedVectors
-from sklearn.feature_extraction.text import TfidfVectorizer
+import numpy as np
+from pathlib import Path
+from datetime import datetime
 from sklearn.svm import SVC
-from utils.embedding_vectoriser import MeanEmbeddingVectorizer, TfidfEmbeddingVectorizer
-from utils import get_clf_results, tune_model, save_model, load_model
-
-pd.set_option("display.width", 10000)
-pd.set_option("display.max_columns", 10000)
-logging.basicConfig(
-    format="%(asctime)s : %(levelname)s : %(message)s", level=logging.INFO
-)
-
-## Load train and test data
-full_data = pd.read_csv("data/processed_data/proc_train.csv")
-train_data = pd.read_csv("data/processed_data/proc_train.csv")
-test_data = pd.read_csv("data/processed_data/proc_test.csv")
-
-## Load synonym augmented training data
-aug_train_data = pd.read_csv("data/aug_data/synonym_aug_proc_train_data.csv")
-
-## Convert text into machine readable form
-## 1) TF-IDF
+from utils import tune_model
+from utils.hf_clf import get_data_files
 
 
-def identity_tokenizer(text):
-    return text
+# Instatiate Typer App
+app = typer.Typer()
 
 
-tfidf = TfidfVectorizer(
-    tokenizer=identity_tokenizer, stop_words="english", lowercase=False
-)
-
-train_tfidf = tfidf.fit_transform(train_data.text_processed)
-test_tfidf = tfidf.fit_transform(test_data.text_processed)
-
-## 2) W2V
-w2v = KeyedVectors.load_word2vec_format(
-    "models/word_embed/weights/GoogleNews-vectors-negative300.bin", binary=True
-)
-
-w2v_mean_vectoriser = MeanEmbeddingVectorizer(w2v, "w2v")
-w2v_train_data = w2v_mean_vectoriser.fit_transform(train_data)
-w2v_test_data = w2v_mean_vectoriser.fit_transform(test_data)
-
-## 3) FastText
-## Fine tuned on Amazon Product Review data
-ft = KeyedVectors.load("models/word_embed/weights/fast_text_model_2021-05-29.model")
-ft_mean_vectoriser = MeanEmbeddingVectorizer(ft)
-ft_train_data = ft_mean_vectoriser.fit_transform(train_data)
-ft_test_data = ft_mean_vectoriser.fit_transform(test_data)
-
-## Pre-trained on Wiki
-ft_wiki = downloader.load("fasttext-wiki-news-subwords-300")
-
-ft_wiki_mean_vectoriser = MeanEmbeddingVectorizer(ft_wiki, "w2v")
-ft_wiki_train_data = ft_wiki_mean_vectoriser.fit_transform(train_data)
-ft_wiki_test_data = ft_wiki_mean_vectoriser.fit_transform(test_data)
-
-## Model development
-## Hyperparameter Tuning
-params_dict = {
+WANDB_RUN_NAME = "amz-svc-sent-clf_" + str(datetime.now())
+WANDB_SVC_PROJ_TAGS = ["Test-Run", "Support Vector Classifier"]
+DEFAULT_SVC_PARAMS_GRID = {
     "kernel": ["linear"],
     "C": [0.5, 0.75, 1.0],
     "gamma": ["auto"],
     "class_weight": ["balanced"],
 }
 
-## Optimal SVC model with TFIDF
-svc_clf_optimal, svc_clf_score, svc_clf_params = tune_model(
-    SVC(), (train_data.toarray(), train_data.sentiment), search_params=params_dict
-)
 
-svc_tfidf_pred = svc_clf_optimal.predict(test_tfidf.toarray())
-get_clf_results(test_data.sentiment.to_numpy(), svc_tfidf_pred)
 
-# Results:
-# -Accuracy: 0.482423
-# -Weighted F1: 0.591577
-# -Macro F1: 0.317604
+@app.command()
+def train(
+    data_dir: str,
+    embeds_col: str = "embeds",
+    hyperparam_grid=DEFAULT_SVC_PARAMS_GRID,
+    wandb_entity: str = "chrisliew",
+    wandb_proj_name: str = "amz-sent-analysis-classical-ml",
+    wandb_run_name: str = WANDB_RUN_NAME,
+    wandb_proj_tags: List[str] = WANDB_SVC_PROJ_TAGS,
+) -> None:
+    """
+    Train a Support Vector Classifer.
 
-# Save model
-svc_tfidf_save_pth = "models/saved_models/svc_tfidf.joblib"
-dump(svc_clf_optimal, svc_tfidf_save_pth)
-load(svc_tfidf_save_pth)
+    Args:\n
+        data_dir (str): Path to a data directory containing train, val and test data in\n
+        in the following structure:\n
+        └─── data_dir\n
+            ├─── train.json\n
+            ├─── test.json\n
+            └─── validation.json\n
+        embeds_col (str): Name of column containing vectorised word embeddings for modelling.\n
+        wandb_entity (str, optional): W and B username. Defaults to 'chrisliew'\n
+        wandb_proj_name (str, optional): W and B project name. Defaults to 'amz-sent-analysis'.\n
+        wandb_run_name (str, optional): W and B run name. Defaults to 'amz-hf-sent-clf'.
+        wandb_proj_tags (List[str], optional): W and B project tags. Defaults to ['Test-Run', 'Albert-V2'].
+    """
+    typer.echo(f"Training a SVC on data from {data_dir}")
 
-## Optimal SVC model with w2v
-svc_w2v = SVC(kernel="linear", gamma="auto", class_weight="balanced", verbose=1)
-svc_w2v.fit(w2v_train_data, train_data.sentiment)
+    # Log into W&B
+    wandb.login()
 
-svc_w2v_pred = svc_w2v.predict(w2v_test_data)
-get_clf_results(test_data.sentiment.to_numpy(), svc_w2v_pred)
+    # Initialise W&B run
+    run = wandb.init(
+        project=wandb_proj_name,
+        name=wandb_run_name,
+        tags=wandb_proj_tags,
+        entity=wandb_entity,
+        job_type="training",
+    )
 
-# Results:
-# -Accuracy: 0.720881
-# -Weighted F1: 0.786658
-# -Macro F1: 0.491202
-# Improvement across the board in terms accuracy & F1 (weighted & macro) as well as across all sentiment classes
+    # Constants
+    ROOT = Path(data_dir)
+    MODEL_SAVE_DIR = Path("logs/svc_clf")
+    data_files = get_data_files(ROOT, format='json')
 
-# Save model
-svc_w2v_save_pth = "models/saved_models/svc_w2v.joblib"
-dump(svc_w2v, svc_w2v_save_pth)
-load(svc_w2v_save_pth)
+    # Get data
+    datasets = dict()
+    datasets["train"] = pd.read_json(ROOT / "train.json")
+    datasets["validation"] = pd.read_json(ROOT / "validation.json")
+    datasets["test"] = pd.read_json(ROOT / "test.json")
 
-## Optimal SVC model with FastText tuned on review data
-svc_fast_txt = SVC(kernel="linear", gamma="auto", class_weight="balanced", verbose=1)
-svc_fast_txt.fit(ft_train_data, train_data.sentiment)
+    # Log data to W&B
+    typer.secho("Logging train, val and test datasets to W and B:",
+                fg=typer.colors.YELLOW)
 
-svc_fast_txt_pred = svc_fast_txt.predict(ft_test_data)
-get_clf_results(test_data.sentiment.to_numpy(), svc_fast_txt_pred)
+    ds_artifact = wandb.Artifact(
+        name=wandb_proj_name + "_datasets",
+        type="datasets",
+        description="""Processed train, val and test data
+            for SVC sequence clf models.""",
+        metadata={"sizes": [len(v) for k, v in datasets.items()]},
+    )
 
-# Results:
-# -Accuracy: 0.84371
-# -Weighted F1: 0.833509
-# -Macro F1: 0.348814
-# Overall improvement (Esp. for positive) but significant decrease in F1 (Esp. Recall) for negative sentiments
-# Observable tradeoff between majority positive class against other minority classes.
+    for name, fp in data_files.items():
+        ds_artifact.add_file(fp, name=name + ".json")
+    run.log_artifact(ds_artifact)
 
-# Save model
-svc_ft_save_pth = "models/saved_models/svc_ft.joblib"
-dump(svc_fast_txt, svc_ft_save_pth)
-load(svc_ft_save_pth)
+    # Get embeddings and labels
+    X_train, y_train = (
+        [embeddings
+         for _, embeddings in datasets["train"][embeds_col].iteritems()],
+        datasets["train"]["labels"],
+    )
 
-## Optimal SVC model with FastText (Wiki)
-svc_fast_txt_wiki = SVC(
-    kernel="linear", gamma="auto", class_weight="balanced", verbose=1
-)
-svc_fast_txt_wiki.fit(ft_wiki_train_data, train_data.sentiment)
+    X_val, y_val = (
+        [embeddings
+         for _, embeddings in datasets["validation"][embeds_col].iteritems()],
+        datasets["validation"]["labels"],
+    )
 
-svc_fast_txt_loaded_pred = svc_fast_txt_wiki.predict(ft_wiki_test_data)
-get_clf_results(test_data.sentiment.to_numpy(), svc_fast_txt_loaded_pred)
+    # Run grid search
 
-# Results:
-# -Accuracy: 0.713116
-# -Weighted F1: 0.781780
-# -Macro F1: 0.487965
-# Similar results to preloaded w2v from GoogleNews vectors. Slightly better negative sentiment accuracy whilst trading off
-# with a slightly poorer positive and neutral class accuracy
+    typer.echo('Performing hyperparam tuning with Randomized Search CV')
 
-# Save model
-svc_ft_wiki_save_pth = "models/saved_models/svc_ft_wiki.joblib"
-dump(svc_fast_txt_wiki, svc_ft_wiki_save_pth)
-load(svc_ft_wiki_save_pth)
+    with cs.spinner():
+        svc_clf_optimal, svc_clf_score, svc_clf_params = tune_model(
+            SVC(),
+            (np.array(X_train), y_train),
+            search_params=hyperparam_grid,
+        )
 
-### SVC Conclusion ###
-# Generally tradeoff between 3 classes. Word vectors increase accuracy and F1 significantly and w2v seems to be the best
-# compromise in terms of F1-Macro. Limiting factor remains imbalanced data with ~95% being positive sentiment.
-# Trained word embeddings generally over-fit on words and semantics of the majority class = Positive.
-# Test with augmented datasets to see if results improve.
+    typer.secho(f"""Best SVC model has the optimal hyparams of: {svc_clf_params} and a score of {svc_clf_score}""",
+                fg=typer.colors.GREEN)
 
-## Improving on our Word Embeddings
-# w2v
-w2v_tfidf_vectoriser = TfidfEmbeddingVectorizer(w2v, "w2v")
-w2v_tfidf_train_data = w2v_tfidf_vectoriser.fit_transform(train_data)
-w2v_tfidf_test_data = w2v_tfidf_vectoriser.fit_transform(test_data)
+    y_probas = svc_clf_optimal.predict_proba(np.array(X_val))
+    y_pred = svc_clf_optimal.predict(np.array(X_val))
 
-# fasttext loaded
-fasttext_tfidf_vectoriser = TfidfEmbeddingVectorizer(ft_wiki)
-ft_tfidf_train_data = w2v_tfidf_vectoriser.fit_transform(train_data)
-ft_tfidf_test_data = w2v_tfidf_vectoriser.fit_transform(test_data)
+    # Run validation
+    typer.echo('Logging classification charts to W&B')
 
-svc_w2v_tfidf_clf_optimal, svc_w2v_tfidf_score, svc_w2v_tfidf_params = tune_model(
-    SVC(), (w2v_tfidf_train_data, train_data.sentiment), search_params=params_dict
-)
+    wandb.sklearn.plot_classifier(
+        svc_clf_optimal,
+        X_train,
+        X_val,
+        y_train,
+        y_val,
+        y_pred,
+        y_probas,
+        labels=["negative", "neutral", "positive"],
+        model_name='SUPPORT VECTOR SEQUENCE CLASSIFIER',
+        feature_names=None
+    )
 
-amz_svc_w2v_tfidf_pred = svc_w2v_tfidf_clf_optimal.predict(w2v_tfidf_test_data)
-get_clf_results(test_data.sentiment.to_numpy(), amz_svc_w2v_tfidf_pred)
+    # Save and log model to W&B
+    typer.secho('Saving model locally and pushing model artifact to W&B',
+                fg=typer.colors.BRIGHT_YELLOW)
 
-# SVC Results with w2v
-# - Accuracy = 0.722575
-# - F2 Macro = 0.490665
-# - F1 Weighted = 0.787518
+    rf_model_save_path = MODEL_SAVE_DIR / (f"rf_clf_{datetime.now()}.joblib")
+    joblib.dump(svc_clf_optimal, rf_model_save_path)
 
-svc_ft_tfidf_clf_optimal, svc_ft_tfidf_score, svc_ft_tfidf_params = tune_model(
-    SVC(), (ft_tfidf_train_data, train_data.sentiment), search_params=params_dict
-)
+    trained_model_artifact = wandb.Artifact(
+        wandb_proj_name + "_svc_model",
+        type="model",
+        description="Trained support vector classifier for sentiment analysis",
+    )
 
-amz_svc_ft_tfidf_pred = svc_ft_tfidf_clf_optimal.predict(ft_tfidf_test_data)
-get_clf_results(test_data.sentiment.to_numpy(), amz_svc_ft_tfidf_pred)
+    trained_model_artifact.add_dir(MODEL_SAVE_DIR,
+                                   name="svc_models")  # ValueError
+    run.log(trained_model_artifact)
+    wandb.finish()
+    typer.secho('Training complete!', fg=typer.colors.GREEN)
 
-# SVC Results with fasttext
-# - Accuracy = 0.722575
-# - F2 Macro = 0.490665
-# - F1 Weighted = 0.787518
-# Same results as w2v
+
+@app.command()
+def predict(
+    wandb_entity: Optional[str] = None,
+    wandb_proj_name: str = 'amz-sent-analysis-classical-ml',
+    inf_data_path: Optional[str] = None,
+    embeds_col: str = "embeds"
+):
+    # This function should pull latest model or specific model artifact
+    # Then take in test data or pull latest or specific test data
+    # and run inference -> Return predictions
+    with wandb.init(entity=wandb_entity, project=wandb_proj_name, job_type="inference") as run:
+        # Pull latest model
+        typer.secho('Pulling latest model from W&B', fg=typer.colors.YELLOW)
+        # ADD IN FUNC to pull specific model
+        my_model_name = f"{wandb_proj_name}_svc_model:latest"
+        my_model_artifact = run.use_artifact(my_model_name)
+        model_dir = my_model_artifact.download()
+        model = joblib.load(model_dir)
+
+        # Load test data
+        test_data = pd.read_csv(inf_data_path)
+
+        # Make predictions
+        typer.secho(
+            f'Making predictions using test dataset from {inf_data_path}',
+            fg=typer.colors.YELLOW)
+
+        y_pred = model.predict(test_data[embeds_col])
+        y_true = test_data["label"]
+
+        run.finish()
+
+        return y_true, y_pred

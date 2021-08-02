@@ -7,6 +7,7 @@ from models.sent_clf_lib.huggingface import (
 )
 from models.sent_clf_lib.sklearn import (
     rf_clf,
+    svc_clf,
     text2embed
 )
 
@@ -35,3 +36,8 @@ app.add_typer(hf_clf.app,
 app.add_typer(rf_clf.app,
               name='rf-clf',
               help='Random Forest sequence classifier.')
+
+# Support Vector Classifier
+app.add_typer(svc_clf.app,
+              name='svc-clf',
+              help='Support vector sequence classifier.')

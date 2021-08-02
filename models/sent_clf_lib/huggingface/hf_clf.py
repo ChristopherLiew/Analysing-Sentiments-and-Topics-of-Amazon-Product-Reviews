@@ -184,11 +184,11 @@ def train(
 # Model Inference (Adapt to allow local model loading)
 @app.command()
 def predict(
-    model_name: Optional[str] = None,
+    model_name: Optional[str] = None,  # DK if necessary for HF integration!
     wandb_entity: str = "chrisliew",
     wandb_proj_name: str = "amz-sent-analysis-deep-learning",
     num_labels: int = 3,
-    inf_data = None,  # Typer cannot support Any and Nested Dicts
+    inf_data: Optional[str] = None,  # Typer cannot support Any and Nested Dicts
     text_col: str = "text"
 ) -> Tuple[List[Union[int, float]], List[Union[int, float]]]:
     """
@@ -246,5 +246,8 @@ def predict(
         y_pred = np.argmax(raw_pred, axis=1)
         y_true = test_data["label"]
 
+        # End W&B run
+        run.finish()
+        
         # Log Test Results to W and B? with CLF results?
         return y_true, y_pred
