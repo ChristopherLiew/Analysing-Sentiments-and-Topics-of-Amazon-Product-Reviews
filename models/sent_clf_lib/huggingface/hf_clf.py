@@ -12,7 +12,7 @@ import torch
 import wandb
 import numpy as np
 from datetime import datetime
-from typing import List, Dict, Optional, Tuple, Union
+from typing import Any, List, Dict, Optional, Tuple, Union
 from datasets import load_dataset
 from transformers import (
     AutoTokenizer,
@@ -184,13 +184,12 @@ def train(
 # Model Inference (Adapt to allow local model loading)
 @app.command()
 def predict(
-    model_name: Optional[str],
-    wandb_run_name: str,
+    model_name: Optional[str] = None,  # DK if necessary for HF integration!
     wandb_entity: str = "chrisliew",
-    wandb_proj_name: str = "amz-sent-analysis",
+    wandb_proj_name: str = "amz-sent-analysis-deep-learning",
     num_labels: int = 3,
-    inf_data: Optional[Dict[str, str]] = None,
-    text_col: Optional[str] = "text"
+    inf_data: Optional[str] = None,  # Typer cannot support Any and Nested Dicts
+    text_col: str = "text"
 ) -> Tuple[List[Union[int, float]], List[Union[int, float]]]:
     """
     Performs inference on a given set of test data using the latest fine tuned or
@@ -212,7 +211,7 @@ def predict(
     with wandb.init(project=wandb_proj_name, job_type="inference") as run:
 
         # Load latest trained model (To be tested)
-        my_model_name = f"{wandb_run_name}:latest"
+        my_model_name = f"{wandb_proj_name}:latest"
         my_model_artifact = run.use_artifact(my_model_name)
         model_dir = my_model_artifact.download()
 
@@ -247,5 +246,8 @@ def predict(
         y_pred = np.argmax(raw_pred, axis=1)
         y_true = test_data["label"]
 
+        # End W&B run
+        run.finish()
+        
         # Log Test Results to W and B? with CLF results?
         return y_true, y_pred
