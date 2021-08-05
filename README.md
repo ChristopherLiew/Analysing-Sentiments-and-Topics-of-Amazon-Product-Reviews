@@ -1,32 +1,95 @@
 # Sentiment Prediction and Topic Modelling using Amazon Product Reviews
 Predicting consumer product review sentiments and understanding paintpoints using topic modelling.
 
-## Methodology & Approach
-### EDA
+## Set Up
+1. Docker
+2. Poetry
+   ```zsh
+   poetry install
+   poetry shell
+   ```
 
-### Text Preprocessing
+## Sentiment Classification
+### Overview
 
-### Data Augmentation
+#### Approach
 
-### Sentiment Analysis
-#### Word Embeddings & Vectorisation
+#### Other Experiments and Areas to Look At
+1. Data Augmentation
+    * Synonyms
+    * Back Translation
 
-#### Classical ML models
-##### Multinomial NB
-##### SVM
-##### Random Forest
+### Sentiment Classification Library / CLI interface (Auto-Sent)
+* Dataset Preparation
+* Preprocessing Pipeline (Include draw.io chart)
+  1. Wrangling
+  2. Convert to Embeddings & Vectorisation / Pooling (For Classical ML only)
+  ```zsh
+  $ auto-sent text2embed create-embeds <DATA_PATH> <OUTPUT_DIR>
+  ```
+  ```zsh
+  # For full documentation
+  $ auto-sent text2embed train --help
+  ```
+* Word Embeddings
+  * Train fast text word embeddings
+  ```zsh
+  $ auto-sent ft-embeds train <DATA_PATH> <OUTPUT_DIR>
+  ```
+  ```zsh
+  # For full documentation
+  $ auto-sent ft-embeds train --help
+  ```
+* Modelling
+  * Hugging Face Transformer
+    1. Train
+    ```zsh
+    $ auto-sent hf-clf train <MODEL_NAME> <DATA_DIR>
+    ```
+    2. Inference (If options are not triggered pulls the latest model and test dataset from W&B)
+    ```zsh
+    $ auto-sent hf-clf predict --model-name <MODEL_NAME> --inf-data <TEST_DATASET_PATH>
+    ```
+  
+  * Random Forest
+    1. Train
+    ```zsh
+    $ auto-sent rf-clf train <DATA_DIR>
+    ```
+    2. Inference (If options are not triggered pulls the latest model and test dataset from W&B)
+    ```zsh
+    $ auto-sent rf-clf predict --inf-data <TEST_DATASET_PATH>
+    ```
+    
+  * SVC
+    1. Train
+    ```zsh
+    $ auto-sent svc-clf train <DATA_DIR>
+    ```
+    2. Inference (If options are not triggered pulls the latest model and test dataset from W&B)
+    ```zsh
+    $ auto-sent svc-clf predict --inf-data <TEST_DATASET_PATH>
+    ``` 
 
-#### Deep Neural Nets (TBD)
-##### Bidirectional LSTMs
+### Experimentation
+Models employed ranged from statistical learning or classical ML models to state of the art transformer models form huggingface. The former required more extensive preprocessing since they are not inherently language models. As such, they were used in combination with word embeddings (i.e. gloVe and fast_text).
 
-#### Transformers
-##### BERT
-##### XLNet (TBD)
-##### roBERTa (TBD)
-##### ALBERT (TBD)
+To view the model experimentation results please visit the W&B repo at:
+* Classical ML
+    ```zsh
+    https://wandb.ai/chrisliew/amz-sent-analysis-classical-ml
+    ```
+* Transformer Models
+    ```zsh
+    https://wandb.ai/chrisliew/amz-sent-analysis
+    ```
 
-### Topic Modelling
-#### Simple Preprocessing
+1. Summary of Classical ML Models Results
+
+2. Summary of Transformer Models Results
+
+## Topic Modelling
+### Experimentation
 #### Models
 ##### LDA
 ##### LSI
