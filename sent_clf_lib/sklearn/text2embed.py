@@ -9,10 +9,7 @@ from pathlib import Path
 from gensim import downloader as api
 from gensim.models import KeyedVectors
 from gensim.models.fasttext import FastText, load_facebook_vectors
-from utils.embedding_vectoriser import (
-    MeanEmbeddingVectorizer,
-    TfidfEmbeddingVectorizer
-)
+from utils.embedding_vectoriser import MeanEmbeddingVectorizer, TfidfEmbeddingVectorizer
 from utils.logging import logger
 
 # Instatiate Typer App
@@ -29,7 +26,9 @@ def create_embeds(
     data_dir: str,
     output_dir: str,
     embed_type: str = "w2v",
-    pretrained_embed_dir: Optional[str] = typer.Option(None, help="Filepath or name of word embeddings to use"),  # Can be None if fast-text
+    pretrained_embed_dir: Optional[str] = typer.Option(
+        None, help="Filepath or name of word embeddings to use"
+    ),  # Can be None if fast-text
     vectorisation_mode: str = "mean",
 ) -> Dict[str, pd.DataFrame]:
 
@@ -51,12 +50,11 @@ def create_embeds(
                 logger.info(
                     """Dowloading a gloVe vectors trained on google news with 300 dims as default since no pretrained embed dir was specified"""
                 )
-                embed_model = api.load('word2vec-google-news-300')
+                embed_model = api.load("word2vec-google-news-300")
 
             else:
                 embed_model = KeyedVectors.load_word2vec_format(
-                    pretrained_embed_dir,
-                    binary=False
+                    pretrained_embed_dir, binary=False
                 )
 
         elif embed_type == "ft":
@@ -77,11 +75,9 @@ def create_embeds(
     logger.info(f"Vectorising word embeddings using {vectorisation_mode}")
 
     if vectorisation_mode == "mean":
-        vec_embed_model = MeanEmbeddingVectorizer(embed_model,
-                                                  model_type=embed_type)
+        vec_embed_model = MeanEmbeddingVectorizer(embed_model, model_type=embed_type)
     else:
-        vec_embed_model = TfidfEmbeddingVectorizer(embed_model,
-                                                   model_type=embed_type)
+        vec_embed_model = TfidfEmbeddingVectorizer(embed_model, model_type=embed_type)
 
     # Convert text into embeddings
     for dataset_name, dataset in datasets.items():

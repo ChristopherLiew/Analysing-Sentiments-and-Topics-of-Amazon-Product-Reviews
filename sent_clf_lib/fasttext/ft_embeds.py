@@ -13,12 +13,13 @@ app = typer.Typer()
 
 
 @app.command()
-def train(data_path: str,
-          output_dir: str,
-          text_col_name: str = 'text',
-          window: int = 5,
-          min_count: int = 5
-          ) -> None:
+def train(
+    data_path: str,
+    output_dir: str,
+    text_col_name: str = "text",
+    window: int = 5,
+    min_count: int = 5,
+) -> None:
     """
     Trains a Fast Text sub-word embeddings model given text data.
 
@@ -38,8 +39,7 @@ def train(data_path: str,
     corpus = pd.read_csv(data_path)
 
     # Instantiate Fast Text model
-    fast_text_model = FastText(window=window,
-                               min_count=min_count)
+    fast_text_model = FastText(window=window, min_count=min_count)
 
     # Build Vocab
     logger.info("Building vocabulary")
@@ -53,7 +53,7 @@ def train(data_path: str,
             corpus_iterable=corpus_iter,
             epochs=fast_text_model.epochs,
             total_examples=fast_text_model.corpus_count,
-            total_words=fast_text_model.corpus_total_words
+            total_words=fast_text_model.corpus_total_words,
         )
 
     # Save trained model

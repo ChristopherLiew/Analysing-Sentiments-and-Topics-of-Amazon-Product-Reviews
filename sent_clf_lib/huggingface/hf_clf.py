@@ -12,7 +12,7 @@ import torch
 import wandb
 import numpy as np
 from datetime import datetime
-from typing import Any, List, Dict, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union
 from datasets import load_dataset
 from transformers import (
     AutoTokenizer,
@@ -164,8 +164,8 @@ def train(
         eval_dataset=tokenized_datasets["validation"],
         data_collator=data_collator,
         compute_metrics=compute_clf_metrics,
-        callbacks=[tb_cb]
-        )
+        callbacks=[tb_cb],
+    )
 
     # Train model
     typer.secho("Starting up model training ...", fg=typer.colors.YELLOW)
@@ -189,7 +189,7 @@ def predict(
     wandb_proj_name: str = "amz-sent-analysis-deep-learning",
     num_labels: int = 3,
     inf_data: Optional[str] = None,  # Typer cannot support Any and Nested Dicts
-    text_col: str = "text"
+    text_col: str = "text",
 ) -> Tuple[List[Union[int, float]], List[Union[int, float]]]:
     """
     Performs inference on a given set of test data using the latest fine tuned or
@@ -244,10 +244,9 @@ def predict(
         test_trainer = Trainer(model)
         raw_pred, _, _ = test_trainer.predict(test_dataset)
         y_pred = np.argmax(raw_pred, axis=1)
-        y_true = test_data["label"]
 
         # End W&B run
         run.finish()
-        
+
         # Log Test Results to W and B? with CLF results?
-        return y_true, y_pred
+        return y_pred

@@ -1,8 +1,6 @@
 """
-Random forest sentiment classifier using processed amazon product review data.
+SVC sentiment classifier using processed amazon product review data.
 """
-# 1) Add in inference code with W&B
-# 2) Run a full test
 
 import typer
 import wandb
@@ -30,7 +28,6 @@ DEFAULT_SVC_PARAMS_GRID = {
     "gamma": ["auto"],
     "class_weight": ["balanced"],
 }
-
 
 
 @app.command()
@@ -76,7 +73,7 @@ def train(
     # Constants
     ROOT = Path(data_dir)
     MODEL_SAVE_DIR = Path("logs/svc_clf")
-    data_files = get_data_files(ROOT, format='json')
+    data_files = get_data_files(ROOT, format="json")
 
     # Get data
     datasets = dict()
@@ -85,8 +82,9 @@ def train(
     datasets["test"] = pd.read_json(ROOT / "test.json")
 
     # Log data to W&B
-    typer.secho("Logging train, val and test datasets to W and B:",
-                fg=typer.colors.YELLOW)
+    typer.secho(
+        "Logging train, val and test datasets to W and B:", fg=typer.colors.YELLOW
+    )
 
     ds_artifact = wandb.Artifact(
         name=wandb_proj_name + "_datasets",
@@ -98,41 +96,47 @@ def train(
 
     for name, fp in data_files.items():
         ds_artifact.add_file(fp, name=name + ".json")
+        typer.echo(f"Logged dataset from: {fp} as {name} to W&B")
+
     run.log_artifact(ds_artifact)
 
     # Get embeddings and labels
     X_train, y_train = (
-        [embeddings
-         for _, embeddings in datasets["train"][embeds_col].iteritems()],
+        [embeddings for _, embeddings in datasets["train"][embeds_col].iteritems()],
         datasets["train"]["labels"],
     )
 
     X_val, y_val = (
-        [embeddings
-         for _, embeddings in datasets["validation"][embeds_col].iteritems()],
+        [
+            embeddings
+            for _, embeddings in datasets["validation"][embeds_col].iteritems()
+        ],
         datasets["validation"]["labels"],
     )
 
     # Run grid search
 
-    typer.echo('Performing hyperparam tuning with Randomized Search CV')
+    typer.echo("Performing hyperparam tuning with Randomized Search CV")
 
     with cs.spinner():
         svc_clf_optimal, svc_clf_score, svc_clf_params = tune_model(
-            SVC(),
+            SVC(probability=True),
             (np.array(X_train), y_train),
             search_params=hyperparam_grid,
         )
 
-    typer.secho(f"""Best SVC model has the optimal hyparams of: {svc_clf_params} and a score of {svc_clf_score}""",
-                fg=typer.colors.GREEN)
+    typer.secho(
+        f"""Best SVC model has the optimal hyparams of: {svc_clf_params} and a score of {svc_clf_score}""",
+        fg=typer.colors.GREEN,
+    )
 
     y_probas = svc_clf_optimal.predict_proba(np.array(X_val))
     y_pred = svc_clf_optimal.predict(np.array(X_val))
 
     # Run validation
-    typer.echo('Logging classification charts to W&B')
+    typer.echo("Logging classification charts to W&B")
 
+    # Super slow (Run only relevant charts)
     wandb.sklearn.plot_classifier(
         svc_clf_optimal,
         X_train,
@@ -142,16 +146,18 @@ def train(
         y_pred,
         y_probas,
         labels=["negative", "neutral", "positive"],
-        model_name='SUPPORT VECTOR SEQUENCE CLASSIFIER',
-        feature_names=None
+        model_name="SUPPORT VECTOR SEQUENCE CLASSIFIER",
+        feature_names=None,
     )
 
     # Save and log model to W&B
-    typer.secho('Saving model locally and pushing model artifact to W&B',
-                fg=typer.colors.BRIGHT_YELLOW)
+    typer.secho(
+        "Saving model locally and pushing model artifact to W&B",
+        fg=typer.colors.BRIGHT_YELLOW,
+    )
 
-    rf_model_save_path = MODEL_SAVE_DIR / (f"rf_clf_{datetime.now()}.joblib")
-    joblib.dump(svc_clf_optimal, rf_model_save_path)
+    svc_model_save_path = MODEL_SAVE_DIR / "svc_clf_model.joblib"
+    joblib.dump(svc_clf_optimal, svc_model_save_path)
 
     trained_model_artifact = wandb.Artifact(
         wandb_proj_name + "_svc_model",
@@ -159,43 +165,57 @@ def train(
         description="Trained support vector classifier for sentiment analysis",
     )
 
-    trained_model_artifact.add_dir(MODEL_SAVE_DIR,
-                                   name="svc_models")  # ValueError
-    run.log(trained_model_artifact)
+    trained_model_artifact.add_file(svc_model_save_path, name="svc_model.joblib")
+    run.log_artifact(trained_model_artifact)
     wandb.finish()
-    typer.secho('Training complete!', fg=typer.colors.GREEN)
+    typer.secho("Training complete!", fg=typer.colors.GREEN)
 
 
 @app.command()
 def predict(
     wandb_entity: Optional[str] = None,
-    wandb_proj_name: str = 'amz-sent-analysis-classical-ml',
+    wandb_proj_name: str = "amz-sent-analysis-classical-ml",
     inf_data_path: Optional[str] = None,
-    embeds_col: str = "embeds"
+    embeds_col: str = "embeds",
 ):
     # This function should pull latest model or specific model artifact
     # Then take in test data or pull latest or specific test data
     # and run inference -> Return predictions
-    with wandb.init(entity=wandb_entity, project=wandb_proj_name, job_type="inference") as run:
-        # Pull latest model
-        typer.secho('Pulling latest model from W&B', fg=typer.colors.YELLOW)
-        # ADD IN FUNC to pull specific model
-        my_model_name = f"{wandb_proj_name}_svc_model:latest"
-        my_model_artifact = run.use_artifact(my_model_name)
-        model_dir = my_model_artifact.download()
-        model = joblib.load(model_dir)
+    with wandb.init(
+        entity=wandb_entity, project=wandb_proj_name, job_type="inference"
+    ) as run:
+
+        typer.secho("Pulling latest model from W&B", fg=typer.colors.YELLOW)
+        with cs.spinner():
+            my_model_name = f"{wandb_proj_name}_svc_model:latest"
+            my_model_artifact = run.use_artifact(my_model_name)
+            model_dir = my_model_artifact.download()
+            model_path = Path(model_dir)
+            model = joblib.load(model_path / "svc_model.joblib")
 
         # Load test data
-        test_data = pd.read_csv(inf_data_path)
+        if inf_data_path is None:
+            typer.secho("Pulling latest test dataset from W&B", fg=typer.colors.YELLOW)
+            with cs.spinner():
+                my_ds_name = f"{wandb_proj_name}_datasets:latest"
+                ds_artifact = run.use_artifact(my_ds_name)
+                ds_dir = ds_artifact.download()
+                inf_data_path = Path(ds_dir) / "test.json"
+
+        test_data = pd.read_json(inf_data_path)
 
         # Make predictions
         typer.secho(
-            f'Making predictions using test dataset from {inf_data_path}',
-            fg=typer.colors.YELLOW)
+            f"Making predictions using test dataset from {inf_data_path}",
+            fg=typer.colors.YELLOW,
+        )
 
-        y_pred = model.predict(test_data[embeds_col])
-        y_true = test_data["label"]
+        X_test = [embeddings for _, embeddings in test_data[embeds_col].iteritems()]
+        print(np.array(X_test).shape)
+        y_pred = model.predict(
+            np.array(X_test)
+        )  # Expects 20 feature dims for some reason. Trained on 100.
 
         run.finish()
 
-        return y_true, y_pred
+        return y_pred
