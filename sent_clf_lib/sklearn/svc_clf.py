@@ -175,23 +175,30 @@ def train(
 def predict(
     wandb_entity: Optional[str] = None,
     wandb_proj_name: str = "amz-sent-analysis-classical-ml",
+    inf_model_path: Optional[str] = None,
     inf_data_path: Optional[str] = None,
-    embeds_col: str = "embeds",
+    embeds_col: str = "embeds"
 ):
-    # This function should pull latest model or specific model artifact
-    # Then take in test data or pull latest or specific test data
-    # and run inference -> Return predictions
+
+    inf_run_name = "svc_inference_" + str(datetime.now())
+
     with wandb.init(
-        entity=wandb_entity, project=wandb_proj_name, job_type="inference"
+        name=inf_run_name,
+        entity=wandb_entity,
+        project=wandb_proj_name,
+        job_type="inference"
     ) as run:
 
-        typer.secho("Pulling latest model from W&B", fg=typer.colors.YELLOW)
-        with cs.spinner():
-            my_model_name = f"{wandb_proj_name}_svc_model:latest"
-            my_model_artifact = run.use_artifact(my_model_name)
-            model_dir = my_model_artifact.download()
-            model_path = Path(model_dir)
-            model = joblib.load(model_path / "svc_model.joblib")
+        if inf_data_path is None:
+            typer.secho("Pulling latest model from W&B", fg=typer.colors.YELLOW)
+            with cs.spinner():
+                my_model_name = f"{wandb_proj_name}_svc_model:latest"
+                my_model_artifact = run.use_artifact(my_model_name)
+                model_dir = my_model_artifact.download()
+                model_path = Path(model_dir)
+                model = joblib.load(model_path / "svc_model.joblib")
+        else:
+            model = joblib.load(inf_model_path)
 
         # Load test data
         if inf_data_path is None:
@@ -211,11 +218,16 @@ def predict(
         )
 
         X_test = [embeddings for _, embeddings in test_data[embeds_col].iteritems()]
-        print(np.array(X_test).shape)
         y_pred = model.predict(
             np.array(X_test)
-        )  # Expects 20 feature dims for some reason. Trained on 100.
+        )
 
+        typer.secho("Logging confusion matrix to W&B", fg=typer.colors.YELLOW)
+        wandb.sklearn.plot_confusion_matrix(
+            y_true=test_data["labels"],
+            y_pred=y_pred,
+            labels=["negative", "neutral", "positive"]
+        )
         run.finish()
 
         return y_pred

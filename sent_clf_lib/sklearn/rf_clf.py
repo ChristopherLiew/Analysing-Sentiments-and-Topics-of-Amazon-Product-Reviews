@@ -15,9 +15,8 @@ from utils import tune_model
 from utils.hf_clf import get_data_files
 
 # TODO:
-# 2) FIX: Feature dims of loaded fitted model is 20
-# when trained, val on 100 dims
-# 3) ENHANCE: Abstract out inference command for sklearn models
+# 1) Change doc strings to Typer.ARGUMENTS / OPTION
+# 2) FIX: W&B logged model differs in _n_features_in from local model (Manual run is ok)
 
 # Instatiate Typer App
 app = typer.Typer()
@@ -110,10 +109,7 @@ def train(
     )
 
     X_val, y_val = (
-        [
-            embeddings
-            for _, embeddings in datasets["validation"][embeds_col].iteritems()
-        ],
+        [embeddings for _, embeddings in datasets["validation"][embeds_col].iteritems()],
         datasets["validation"]["labels"],
     )
 
@@ -129,8 +125,8 @@ def train(
         )
 
     typer.secho(
-        f"""Best RF model has the optimal hyparams of: {rf_clf_params} and a score of {rf_clf_score}""",
-        fg=typer.colors.GREEN,
+        f"Best RF model has the optimal hyparams of: {rf_clf_params} and a score of {rf_clf_score}",
+        fg=typer.colors.GREEN
     )
 
     print("Shape of ")
@@ -160,7 +156,6 @@ def train(
 
     rf_model_save_path = MODEL_SAVE_DIR / "rf_clf_model.joblib"
     joblib.dump(rf_clf_optimal, rf_model_save_path)
-
     trained_model_artifact = wandb.Artifact(
         wandb_proj_name + "_rf_model",
         type="model",
@@ -182,8 +177,8 @@ def predict(
     wandb_entity: Optional[str] = None,
     inf_model_path: Optional[str] = None,
     inf_data_path: Optional[str] = None,
-    embeds_col: str = "embeds",
-):
+    embeds_col: str = "embeds"
+) -> np.array:
 
     inf_run_name = "rf_inference_" + str(datetime.now())
 
@@ -193,6 +188,7 @@ def predict(
         project=wandb_proj_name,
         job_type="inference",
     ) as run:
+
         if inf_model_path is None:
             typer.secho("Pulling latest model from W&B", fg=typer.colors.YELLOW)
             with cs.spinner():
@@ -201,12 +197,13 @@ def predict(
                 model_dir = my_model_artifact.download()
                 model_path = Path(model_dir)
                 model = joblib.load(model_path / "random_forest_model.joblib")
-
-        model = joblib.load(inf_model_path)
+        else:
+            model = joblib.load(inf_model_path)
 
         # Load test data
         if inf_data_path is None:
-            typer.secho("Pulling latest test dataset from W&B", fg=typer.colors.YELLOW)
+            typer.secho("Pulling latest test dataset from W&B",
+                        fg=typer.colors.YELLOW)
             with cs.spinner():
                 my_ds_name = f"{wandb_proj_name}_datasets:latest"
                 ds_artifact = run.use_artifact(my_ds_name)
@@ -232,7 +229,7 @@ def predict(
         wandb.sklearn.plot_confusion_matrix(
             y_true=test_data["labels"],
             y_pred=y_pred,
-            labels=["negative", "neutral", "positive"],
+            labels=["negative", "neutral", "positive"]
         )
         run.finish()
 
