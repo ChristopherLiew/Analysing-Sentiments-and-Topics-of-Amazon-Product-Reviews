@@ -20,10 +20,15 @@ Predicting consumer product review sentiments and understanding paintpoints usin
     * Back Translation
 
 ### Sentiment Classification Library / CLI interface (Auto-Sent)
-* Dataset Preparation
 * Preprocessing Pipeline (Include draw.io chart)
   1. Wrangling
-  2. Convert to Embeddings & Vectorisation / Pooling (For Classical ML only)
+     * Normalisation
+     * Expanding of contractions
+     * Removal of punctuation and accented characters
+     * Lemmatization
+     * Stop word removal
+     * Tokenization (if necessary) 
+  3. Convert to Embeddings & Vectorisation / Pooling (For Classical ML only)
   ```zsh
   $ auto-sent text2embed create-embeds <DATA_PATH> <OUTPUT_DIR>
   ```
@@ -84,11 +89,7 @@ To view the model experimentation results please visit the W&B repo at:
     https://wandb.ai/chrisliew/amz-sent-analysis
     ```
 
-1. Summary of Classical ML Models Results
-
-2. Summary of Transformer Models Results
-
-## Topic Modelling
+## Topic Modelling (Completed - Results to be summarised below)
 ### Experimentation
 #### Models
 ##### LDA
