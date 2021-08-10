@@ -84,11 +84,7 @@ To view the model experimentation results please visit the W&B repo at:
     https://wandb.ai/chrisliew/amz-sent-analysis
     ```
 
-1. Summary of Classical ML Models Results
-
-2. Summary of Transformer Models Results
-
-## Topic Modelling
+## Topic Modelling (Completed - Results to be summarised below)
 ### Experimentation
 #### Models
 ##### LDA
