@@ -3,7 +3,7 @@ store/*
 logs/*
 wandb/*
 trained_models/*
-artifacts/*
+artifacts
 .venv
 .vscode
 __pycache__
