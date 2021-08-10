@@ -20,10 +20,15 @@ Predicting consumer product review sentiments and understanding paintpoints usin
     * Back Translation
 
 ### Sentiment Classification Library / CLI interface (Auto-Sent)
-* Dataset Preparation
 * Preprocessing Pipeline (Include draw.io chart)
   1. Wrangling
-  2. Convert to Embeddings & Vectorisation / Pooling (For Classical ML only)
+     * Normalisation
+     * Expanding of contractions
+     * Removal of punctuation and accented characters
+     * Lemmatization
+     * Stop word removal
+     * Tokenization (if necessary) 
+  3. Convert to Embeddings & Vectorisation / Pooling (For Classical ML only)
   ```zsh
   $ auto-sent text2embed create-embeds <DATA_PATH> <OUTPUT_DIR>
   ```
