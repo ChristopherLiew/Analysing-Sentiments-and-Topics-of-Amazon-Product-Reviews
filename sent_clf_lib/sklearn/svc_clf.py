@@ -178,7 +178,7 @@ def predict(
     inf_model_path: Optional[str] = None,
     inf_data_path: Optional[str] = None,
     embeds_col: str = "embeds"
-):
+) -> np.array:
 
     inf_run_name = "svc_inference_" + str(datetime.now())
 
