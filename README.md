@@ -84,7 +84,7 @@ To view the model experimentation results please visit the W&B repo at:
     ```zsh
     https://wandb.ai/chrisliew/amz-sent-analysis-classical-ml
     ```
-* Transformer Models
+* Transformer Models (To be retrained and logged on W&B)
     ```zsh
     https://wandb.ai/chrisliew/amz-sent-analysis
     ```
