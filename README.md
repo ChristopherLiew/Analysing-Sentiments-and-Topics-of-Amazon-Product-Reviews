@@ -86,7 +86,7 @@ To view the model experimentation results please visit the W&B repo at:
     ```
 * Transformer Models (To be retrained and logged on W&B)
     ```zsh
-    https://wandb.ai/chrisliew/amz-sent-analysis
+    https://wandb.ai/chrisliew/amz-sent-analysis-deep-learning
     ```
 
 ## Topic Modelling (Completed - Results to be summarised below)
