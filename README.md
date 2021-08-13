@@ -103,7 +103,7 @@ To view the model experimentation results please visit the W&B repo at:
 $ curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
 
 # CD into relevant directory where the pyproject file is
-$ cd /home/ec2-user/SageMaker/<GITHUB REPO>
+$ cd /home/ec2-user/SageMaker/Analysing-sentiments-and-topics-of-amazon-reviews
 
 # Activate venv
 $ source $HOME/.poetry/env 
