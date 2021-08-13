@@ -95,3 +95,21 @@ To view the model experimentation results please visit the W&B repo at:
 ##### LDA
 ##### LSI
 ##### GSDMM
+
+## Running Training / Inference Jobs in Sagemaker Notebook Instance
+```zsh
+# Install via curl
+
+$ curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
+
+# CD into relevant directory where the pyproject file is on STG instance
+$ cd /home/ec2-user/SageMaker/repositories/mol-va-aat-library
+
+# Activate venv
+$ source $HOME/.poetry/env 
+
+# Set up
+$ poetry install
+$ poetry shell
+```
+
