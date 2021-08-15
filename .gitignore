@@ -5,6 +5,7 @@ logs/*
 wandb/*
 trained_models/*
 artifacts
+wandb
 .venv
 .vscode
 __pycache__
