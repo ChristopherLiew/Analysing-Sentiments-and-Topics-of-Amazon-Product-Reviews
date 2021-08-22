@@ -79,7 +79,7 @@ Predicting consumer product review sentiments and understanding paintpoints usin
     $ auto-sent svc-clf predict --inf-data <TEST_DATASET_PATH>
     ``` 
 
-### Experimentation
+### Experimentation Tracking & Results
 Models employed ranged from statistical learning or classical ML models to state of the art transformer models form huggingface. The former required more extensive preprocessing since they are not inherently language models. As such, they were used in combination with word embeddings (i.e. gloVe and fast_text).
 
 To view the model experimentation results please visit the W&B repo at:
