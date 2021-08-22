@@ -1,22 +1,53 @@
-FROM python:3.8
+###############################################
+# Base Image                                  #
+###############################################
+FROM python:3.8-slim as python-base
 
-RUN pip install poetry
-RUN mkdir /amz-sent-analysis
+ENV PYTHONUNBUFFERED=1\
+    PYTHONDONTWRITEBYTECODE=1\
+    PIP_NO_CACHE_DIR=off\
+    PIP_DISABLE_PIP_VERSION_CHECK=on\
+    PIP_DEFAULT_TIMEOUT=100\
+    POETRY_VERSION=1.1.6\
+    POETRY_HOME="/opt/poetry"\ 
+    POETRY_VIRTUALENVS_IN_PROJECT=true\
+    POETRY_NO_INTERACTION=1\
+    PYSETUP_PATH="/opt/pysetup"\
+    VENV_PATH="/opt/pysetup/.venv"
 
-WORKDIR /amz-sent-analysis
-ENV PYTHONPATH=${PYTHONPATH}:${PWD}
+# prepend poetry and venv to path
+ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
 
-COPY poetry.lock pyproject.toml ./
-RUN poetry export -f requirements.txt --output requirements.txt
-RUN pip install -r requirements.txt
-COPY . ./
+###############################################
+# Builder Image                               #
+###############################################
+FROM python-base as builder-base
+RUN apt-get update\
+    && apt-get install --no-install-recommends -y\
+    curl\
+    build-essential
 
-RUN poetry build
-RUN python -m pip install --upgrade pip
-RUN pip install dist/src-*.whl
-# Copies app dependencies into container wd
-# Do not create a venv first since we are already in a venv by using a docker image
+# install poetry - respects $POETRY_VERSION & $POETRY_HOME
+RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
+# Disable new poetry installer
+RUN poetry config experimental.new-installer false
 
-# We use pip and do not use poetry config venv create false as it will create an editable install
-# RUN poetry config virtualenvs.create false
-# RUN poetry install --no-ansi --no-interaction
+# copy project requirement files here to ensure they will be cached.
+WORKDIR $PYSETUP_PATH
+COPY ./poetry.lock ./pyproject.toml ./
+
+# install runtime deps - uses $POETRY_VIRTUALENVS_IN_PROJECT internally
+RUN poetry install --no-dev
+
+###############################################
+# Production Image                            #
+###############################################
+FROM python-base as production
+COPY --from=builder-base $PYSETUP_PATH $PYSETUP_PATH
+COPY . /src/
+
+# References:
+# https://www.mktr.ai/the-data-scientists-quick-guide-to-dockerfiles-with-examples/
+# https://github.com/michael0liver/python-poetry-docker-example/blob/master/docker/Dockerfile
+# Dockerfile TUtorial
+# https://www.youtube.com/watch?v=6Er8MAvTWlI

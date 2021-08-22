@@ -1,16 +1,10 @@
 import pandas as pd
 import numpy as np
 import pickle
-from gsdmm import MovieGroupProcess
+from models.topic_mod.gsdmm.gsdmm import MovieGroupProcess
 from gensim import corpora
 from utils import convert_to_lists
 
-# TBD:
-# 1) Refactor to suit new dataset format
-
-
-### Split dataset into POS, NEG, NEU ###
-# Load existing ngram data from Topic_Modelling_LDA.py file:
 
 amz_ngrams = pd.read_csv("data/topic_data/full_ngram.csv", index_col=False)
 
@@ -27,6 +21,7 @@ amz_ngrams_neg = list(
 amz_ngrams_pos = convert_to_lists(amz_ngrams_pos)
 amz_ngrams_neu = convert_to_lists(amz_ngrams_neu)
 amz_ngrams_neg = convert_to_lists(amz_ngrams_neg)
+
 
 ### Construct BoW corpus ###
 # Create Dictionary & Filter very rare words

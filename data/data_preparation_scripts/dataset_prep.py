@@ -6,13 +6,15 @@ from utils.datasets import create_model_dev_dir, process_dataset_labels
 
 
 # Load raw data
-raw_df = pd.read_csv('data/raw/Datafiniti_Amazon_Consumer_Reviews_of_Amazon_Products_May19.csv')
+raw_df = pd.read_csv(
+    "data/raw/Datafiniti_Amazon_Consumer_Reviews_of_Amazon_Products_May19.csv"
+)
 
 # Get relevant rows
-sel_cols = ['reviews.text', 'reviews.rating']
+sel_cols = ["reviews.text", "reviews.rating"]
 raw_df_sel = raw_df[sel_cols]
 raw_size = len(raw_df_sel)
-print(f'Size of dataset: {raw_size}')
+print(f"Size of dataset: {raw_size}")
 
 train_size = int(0.9 * raw_size)
 val_size = int(0.1 * train_size)
@@ -43,13 +45,7 @@ test_processed_hf = preprocess_text(test_raw, tokenize=False)
 
 
 # Convert product review ratings into sentiment labels
-label_mapping = {
-    1: 0,
-    2: 0,
-    3: 1,
-    4: 2,
-    5: 2
-}
+label_mapping = {1: 0, 2: 0, 3: 1, 4: 2, 5: 2}
 
 # Preprocessed for classical ml
 train_processed_mapped = process_dataset_labels(train_processed, label_mapping)
@@ -57,34 +53,40 @@ val_processed_mapped = process_dataset_labels(val_processed, label_mapping)
 test_processed_mapped = process_dataset_labels(test_processed, label_mapping)
 
 # Preprocessed for transformer models
-train_processed_hf_mapped = process_dataset_labels(train_processed_hf, label_mapping).dropna()
-val_processed_hf_mapped = process_dataset_labels(val_processed_hf, label_mapping).dropna()
-test_processed_hf_mapped = process_dataset_labels(test_processed_hf, label_mapping).dropna()
+train_processed_hf_mapped = process_dataset_labels(
+    train_processed_hf, label_mapping
+).dropna()
+val_processed_hf_mapped = process_dataset_labels(
+    val_processed_hf, label_mapping
+).dropna()
+test_processed_hf_mapped = process_dataset_labels(
+    test_processed_hf, label_mapping
+).dropna()
 
 # Write data
 # Raw split
 raw_data_filepaths = {
-    'train': train_raw.dropna(),
-    'validation': val_raw.dropna(),
-    'test': test_raw.dropna()
+    "train": train_raw.dropna(),
+    "validation": val_raw.dropna(),
+    "test": test_raw.dropna(),
 }
 
-create_model_dev_dir(raw_data_filepaths, 'data/raw_split')
+create_model_dev_dir(raw_data_filepaths, "data/raw_split")
 
 # Preprocessed for classical ml
 raw_data_filepaths_ml = {
-    'train': train_processed_mapped.dropna(),
-    'validation': val_processed_mapped.dropna(),
-    'test': test_processed_mapped.dropna()
+    "train": train_processed_mapped.dropna(),
+    "validation": val_processed_mapped.dropna(),
+    "test": test_processed_mapped.dropna(),
 }
 
-create_model_dev_dir(raw_data_filepaths_ml, 'data/processed_ml')
+create_model_dev_dir(raw_data_filepaths_ml, "data/processed_ml")
 
 # Preprocessed for transformer models
 raw_data_filepaths_tf = {
-    'train': train_processed_hf_mapped,
-    'validation': val_processed_hf_mapped,
-    'test': test_processed_hf_mapped
+    "train": train_processed_hf_mapped,
+    "validation": val_processed_hf_mapped,
+    "test": test_processed_hf_mapped,
 }
 
-create_model_dev_dir(raw_data_filepaths_tf, 'data/processed_hf')
+create_model_dev_dir(raw_data_filepaths_tf, "data/processed_hf")

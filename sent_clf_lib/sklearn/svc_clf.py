@@ -177,7 +177,7 @@ def predict(
     wandb_proj_name: str = "amz-sent-analysis-classical-ml",
     inf_model_path: Optional[str] = None,
     inf_data_path: Optional[str] = None,
-    embeds_col: str = "embeds"
+    embeds_col: str = "embeds",
 ) -> np.array:
 
     inf_run_name = "svc_inference_" + str(datetime.now())
@@ -186,7 +186,7 @@ def predict(
         name=inf_run_name,
         entity=wandb_entity,
         project=wandb_proj_name,
-        job_type="inference"
+        job_type="inference",
     ) as run:
 
         if inf_data_path is None:
@@ -218,15 +218,13 @@ def predict(
         )
 
         X_test = [embeddings for _, embeddings in test_data[embeds_col].iteritems()]
-        y_pred = model.predict(
-            np.array(X_test)
-        )
+        y_pred = model.predict(np.array(X_test))
 
         typer.secho("Logging confusion matrix to W&B", fg=typer.colors.YELLOW)
         wandb.sklearn.plot_confusion_matrix(
             y_true=test_data["labels"],
             y_pred=y_pred,
-            labels=["negative", "neutral", "positive"]
+            labels=["negative", "neutral", "positive"],
         )
         run.finish()
 

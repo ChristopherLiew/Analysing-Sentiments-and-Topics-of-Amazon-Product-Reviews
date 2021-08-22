@@ -2,7 +2,10 @@
 Predicting consumer product review sentiments and understanding paintpoints using topic modelling.
 
 ## Set Up
-1. Docker
+1. Build Docker Poetry Image
+    ```zsh
+    docker build . -t amz-sent-analysis
+    ```
 2. Poetry
    ```zsh
    poetry install

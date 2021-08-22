@@ -109,7 +109,10 @@ def train(
     )
 
     X_val, y_val = (
-        [embeddings for _, embeddings in datasets["validation"][embeds_col].iteritems()],
+        [
+            embeddings
+            for _, embeddings in datasets["validation"][embeds_col].iteritems()
+        ],
         datasets["validation"]["labels"],
     )
 
@@ -126,7 +129,7 @@ def train(
 
     typer.secho(
         f"Best RF model has the optimal hyparams of: {rf_clf_params} and a score of {rf_clf_score}",
-        fg=typer.colors.GREEN
+        fg=typer.colors.GREEN,
     )
 
     print("Shape of ")
@@ -177,7 +180,7 @@ def predict(
     wandb_entity: Optional[str] = None,
     inf_model_path: Optional[str] = None,
     inf_data_path: Optional[str] = None,
-    embeds_col: str = "embeds"
+    embeds_col: str = "embeds",
 ) -> np.array:
 
     inf_run_name = "rf_inference_" + str(datetime.now())
@@ -202,8 +205,7 @@ def predict(
 
         # Load test data
         if inf_data_path is None:
-            typer.secho("Pulling latest test dataset from W&B",
-                        fg=typer.colors.YELLOW)
+            typer.secho("Pulling latest test dataset from W&B", fg=typer.colors.YELLOW)
             with cs.spinner():
                 my_ds_name = f"{wandb_proj_name}_datasets:latest"
                 ds_artifact = run.use_artifact(my_ds_name)
@@ -229,7 +231,7 @@ def predict(
         wandb.sklearn.plot_confusion_matrix(
             y_true=test_data["labels"],
             y_pred=y_pred,
-            labels=["negative", "neutral", "positive"]
+            labels=["negative", "neutral", "positive"],
         )
         run.finish()
 
