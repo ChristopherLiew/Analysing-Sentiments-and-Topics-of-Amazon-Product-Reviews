@@ -1,7 +1,7 @@
 # Sentiment Prediction and Topic Modelling using Amazon Product Reviews
 ![](https://img.shields.io/github/issues/ChristopherLiew/Analysing-sentiments-and-topics-of-amazon-reviews) ![](https://img.shields.io/github/languages/code-size/ChristopherLiew/Analysing-sentiments-and-topics-of-amazon-reviews) ![](https://img.shields.io/github/last-commit/ChristopherLiew/Analysing-sentiments-and-topics-of-amazon-reviews)
 
-Predicting consumer product review sentiments and understanding paintpoints using topic modelling.
+Predicting consumer product review sentiments using classical ml and language models (SOTA transformers) and understanding paintpoints using topic modelling.
 
 ## Set Up
 1. Build Docker Poetry Image
@@ -16,16 +16,21 @@ Predicting consumer product review sentiments and understanding paintpoints usin
 
 ## Sentiment Classification
 ### Overview
+Sentiment categories:
+1. Positive = 1
+2. Neutral = 0
+3. Negative = -1
 
-#### Approach
+### Approach
+Constructed preprocessing, training and inference pipelines with W&B logging (metrics & artifacts) using a simple CLI application.
 
 #### Other Experiments and Areas to Look At
 1. Data Augmentation
     * Synonyms
     * Back Translation
 
-### Sentiment Classification Library / CLI interface (Auto-Sent)
-* Preprocessing Pipeline (Include draw.io chart)
+### Sentiment Classification CLI Application Overview 
+* Preprocessing Pipelines
   1. Wrangling
      * Normalisation
      * Expanding of contractions
@@ -41,7 +46,7 @@ Predicting consumer product review sentiments and understanding paintpoints usin
   # For full documentation
   $ auto-sent text2embed train --help
   ```
-* Word Embeddings
+* Word Embedding Generation Pipelines
   * Train fast text word embeddings
   ```zsh
   $ auto-sent ft-embeds train <DATA_PATH> <OUTPUT_DIR>
@@ -50,7 +55,7 @@ Predicting consumer product review sentiments and understanding paintpoints usin
   # For full documentation
   $ auto-sent ft-embeds train --help
   ```
-* Modelling
+* Modelling Pipelines for Training & Inference
   * Hugging Face Transformer
     1. Train
     ```zsh
