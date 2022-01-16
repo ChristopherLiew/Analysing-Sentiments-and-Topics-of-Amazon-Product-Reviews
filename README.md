@@ -22,12 +22,12 @@ Sentiment categories:
 3. Negative = -1
 
 ### Approach
-Constructed preprocessing, training and inference pipelines with W&B logging (metrics & artifacts) using a simple CLI application.
+Constructed preprocessing, training and inference pipelines with ```Weights & Biases``` logging (metrics & artifacts) using a simple CLI application.
 
 #### Other Experiments and Areas to Look At
 1. Data Augmentation
     * Synonyms
-    * Back Translation
+    * Back Translation using Google Translate (EN -> DE -> EN)
 
 ### Sentiment Classification CLI Application Overview 
 * Preprocessing Pipelines
@@ -90,14 +90,9 @@ Constructed preprocessing, training and inference pipelines with W&B logging (me
 Models employed ranged from statistical learning or classical ML models to state of the art transformer models form huggingface. The former required more extensive preprocessing since they are not inherently language models. As such, they were used in combination with word embeddings (i.e. gloVe and fast_text).
 
 To view the model experimentation results please visit the W&B repo at:
-* Classical ML
-    ```zsh
-    https://wandb.ai/chrisliew/amz-sent-analysis-classical-ml
-    ```
-* Transformer Models (To be retrained and logged on W&B)
-    ```zsh
-    https://wandb.ai/chrisliew/amz-sent-analysis-deep-learning
-    ```
+* Classical ML: https://wandb.ai/chrisliew/amz-sent-analysis-classical-ml
+    
+* Transformer Models: https://wandb.ai/chrisliew/amz-sent-analysis-deep-learning
 
 ## Topic Modelling (Completed - Results to be summarised below)
 ### Experimentation
