@@ -1,4 +1,6 @@
 # Sentiment Prediction and Topic Modelling using Amazon Product Reviews
+![](https://img.shields.io/github/issues/ChristopherLiew/Analysing-sentiments-and-topics-of-amazon-reviews) ![](https://img.shields.io/github/languages/code-size/ChristopherLiew/Analysing-sentiments-and-topics-of-amazon-reviews) ![](https://img.shields.io/github/last-commit/ChristopherLiew/Analysing-sentiments-and-topics-of-amazon-reviews)
+
 Predicting consumer product review sentiments and understanding paintpoints using topic modelling.
 
 ## Set Up
